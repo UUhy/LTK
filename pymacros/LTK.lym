@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <description>Lithography Tool Kit</description>
+ <version>1</version>
+ <category>pymacros</category>
+ <prolog/>
+ <epilog/>
+ <doc/>
+ <autorun>true</autorun>
+ <autorun-early>false</autorun-early>
+ <shortcut/>
+ <show-in-menu>false</show-in-menu>
+ <group-name/>
+ <menu-path/>
+ <interpreter>python</interpreter>
+ <dsl-interpreter-name/>
+ <text>import pya
+
+from vernier import vernier
+from cross import cross
+from doseSeries import doseSeries
+from fieldMarker import fieldMarker
+from shape import shape
+from alignmentMark import alignmentMark
+
+
+class LTK(pya.Library):
+  """
+  The library where we will put the PCell into 
+  """
+
+  def __init__(self):
+  
+    # Set the description
+    self.description = "Lithography Tool Kit"
+    
+    # Create the PCell declarations
+    self.layout().register_pcell("Alignment Mark", alignmentMark())
+    self.layout().register_pcell("Alignment Vernier", vernier())
+    self.layout().register_pcell("Alignment Cross", cross())
+    self.layout().register_pcell("Jeol Dose Series", doseSeries())
+    self.layout().register_pcell("Jeol Field Marker", fieldMarker())
+    
+    # Register the library
+    self.register("LTK")
+
+#-------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------
+
+# Instantiate and register the library
+LTK()</text>
+</klayout-macro>
