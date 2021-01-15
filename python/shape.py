@@ -48,21 +48,73 @@ class shape(object):
     self.layout = layout
     self.cell = layout.create_cell("shape")
     self.layer = layout.layer(1,0)
-    self.textNumber = [pya.Polygon([pya.Point(1000,0), pya.Point(0,1000), pya.Point(0,6000), pya.Point(1000,7000), 
+    self.textNumber = []
+    #Number 0
+    self.textNumber.append(pya.Polygon([pya.Point(1000,0), pya.Point(0,1000), pya.Point(0,6000), pya.Point(1000,7000), 
       pya.Point(4000,7000), pya.Point(5000,6000), pya.Point(1500,6000), pya.Point(1000,5500),
       pya.Point(1000,1500), pya.Point(1500,1000), pya.Point(3500,1000), pya.Point(4000,1500),
       pya.Point(4000,5500), pya.Point(3500,6000), pya.Point(5000,6000), pya.Point(5000,1000),
-      pya.Point(4000,0)]),
-      pya.Polygon([pya.Point(0,0), pya.Point(0,1000), pya.Point(2000,1000), pya.Point(2000,5000), 
+      pya.Point(4000,0)]))
+    #Number 1
+    self.textNumber.append(pya.Polygon([pya.Point(0,0), pya.Point(0,1000), pya.Point(2000,1000), pya.Point(2000,5000), 
       pya.Point(1500,5000), pya.Point(500,4000), pya.Point(0,4000), pya.Point(0,5000),
       pya.Point(2000,7000), pya.Point(3000,7000), pya.Point(3000,1000), pya.Point(5000,1000),
-      pya.Point(5000,0)]),
-      pya.Polygon([pya.Point(0,0), pya.Point(0,2500), pya.Point(1000,3500), pya.Point(3500,3500), 
+      pya.Point(5000,0)]))
+    #Number 2
+    self.textNumber.append(pya.Polygon([pya.Point(0,0), pya.Point(0,2500), pya.Point(1000,3500), pya.Point(3500,3500), 
       pya.Point(4000,4000), pya.Point(4000,5500), pya.Point(3500,6000), pya.Point(1500,6000),
       pya.Point(1000,5500), pya.Point(1000,5000), pya.Point(0,5000), pya.Point(0,6000),
       pya.Point(1000,7000), pya.Point(4000,7000), pya.Point(5000,6000), pya.Point(5000,3500),
       pya.Point(4000,2500), pya.Point(1500,2500), pya.Point(1000,2000), pya.Point(1000,1000),
-      pya.Point(5000,1000), pya.Point(5000,0)])]
+      pya.Point(5000,1000), pya.Point(5000,0)]))
+    #Number 3
+    self.textNumber.append(pya.Polygon([pya.Point(1000,0), pya.Point(0,1000), pya.Point(0,2000), pya.Point(1000,2000), 
+      pya.Point(1000,1500), pya.Point(1500,1000), pya.Point(3500,1000), pya.Point(4000,1500),
+      pya.Point(4000,2500), pya.Point(3500,3000), pya.Point(2000,3000), pya.Point(2000,4000),
+      pya.Point(3500,4000), pya.Point(4000,4500), pya.Point(4000,5500), pya.Point(3500,6000),
+      pya.Point(1500,6000), pya.Point(1000,5500), pya.Point(1000,5000), pya.Point(0,5000),
+      pya.Point(0,6000), pya.Point(1000,7000), pya.Point(4000,7000), pya.Point(5000,6000),
+      pya.Point(5000,4000), pya.Point(4500,3500), pya.Point(5000,3000), pya.Point(5000,1000),
+      pya.Point(4000,0)]))
+    #Number 4
+    self.textNumber.append(pya.Polygon([pya.Point(3000,0), pya.Point(3000,1500), pya.Point(0,1500), pya.Point(0,2500), 
+      pya.Point(3000,2500), pya.Point(3000,5000), pya.Point(2500,5000), pya.Point(1000,3500),
+      pya.Point(1000,2500), pya.Point(0,2500), pya.Point(0,4000), pya.Point(3000,7000),
+      pya.Point(4000,7000), pya.Point(4000,2500), pya.Point(5000,2500), pya.Point(5000,1500),
+      pya.Point(4000,1500), pya.Point(4000,0)]))
+    #Number 5
+    self.textNumber.append(pya.Polygon([pya.Point(1000,0), pya.Point(0,1000), pya.Point(0,2000), pya.Point(1000,2000), 
+      pya.Point(1000,1500), pya.Point(1500,1000), pya.Point(3500,1000), pya.Point(4000,1500), pya.Point(4000,3000),
+      pya.Point(3500,3500), pya.Point(0,3500), pya.Point(0,7000), pya.Point(5000,7000), pya.Point(5000,6000),
+      pya.Point(1000,6000), pya.Point(1000,4500), pya.Point(4000,4500), pya.Point(5000,3500), pya.Point(5000,1000),
+      pya.Point(4000,0)]))
+    #Number 6
+    self.textNumber.append(pya.Polygon([pya.Point(1000,0), pya.Point(0,1000), pya.Point(0,5000), pya.Point(2000,7000), 
+      pya.Point(4000,7000), pya.Point(4000,6000), pya.Point(2500,6000), pya.Point(1500,5000),
+      pya.Point(1500,4500), pya.Point(4000,4500), pya.Point(5000,3500), pya.Point(1500,3500),
+      pya.Point(1000,3000), pya.Point(1000,1500), pya.Point(1500,1000), pya.Point(3500,1000),
+      pya.Point(4000,1500), pya.Point(4000,3000), pya.Point(3500,3500), pya.Point(5000,3500),
+      pya.Point(5000,1000), pya.Point(4000,0)]))
+    #Number 7
+    self.textNumber.append(pya.Polygon([pya.Point(2000,0), pya.Point(2000,3500), pya.Point(4000,5500), pya.Point(4000,6000), 
+      pya.Point(0,6000), pya.Point(0,7000), pya.Point(5000,7000), pya.Point(5000,5000),
+      pya.Point(3000,3000), pya.Point(3000,0)]))
+    #Number 8
+    self.textNumber.append(pya.Polygon([pya.Point(1000,0), pya.Point(0,1000), pya.Point(0,3000), pya.Point(500,3500), 
+      pya.Point(0,4000), pya.Point(0,6000), pya.Point(1000,7000), pya.Point(4000,7000),
+      pya.Point(5000,6000), pya.Point(1500,6000), pya.Point(1000,5500), pya.Point(1000,4500),
+      pya.Point(1500,4000), pya.Point(3500,4000), pya.Point(4000,4500), pya.Point(4000,5500),
+      pya.Point(3500,6000), pya.Point(5000,6000), pya.Point(5000,4000), pya.Point(4500,3500),
+      pya.Point(5000,3000), pya.Point(1500,3000), pya.Point(1000,2500), pya.Point(1000,1500),
+      pya.Point(1500,1000), pya.Point(3500,1000), pya.Point(4000,1500), pya.Point(4000,2500),
+      pya.Point(3500,3000), pya.Point(5000,3000), pya.Point(5000,1000), pya.Point(4000,0)]))
+    #Number 9
+    self.textNumber.append(pya.Polygon([pya.Point(1000,0), pya.Point(1000,1000), pya.Point(2500,1000), pya.Point(3500,2000), 
+      pya.Point(3500,2500), pya.Point(1000,2500), pya.Point(0,3500), pya.Point(3500,3500),
+      pya.Point(4000,4000), pya.Point(4000,5500), pya.Point(3500,6000), pya.Point(1500,6000),
+      pya.Point(1000,5500), pya.Point(1000,4000), pya.Point(1500,3500), pya.Point(0,3500),
+      pya.Point(0,6000), pya.Point(1000,7000), pya.Point(4000,7000), pya.Point(5000,6000),
+      pya.Point(5000,2000), pya.Point(3000,0)]))
     
   def __repr__(self):
     return ''
@@ -294,11 +346,11 @@ def testKLayout():
     cell.shapes(layer).insert(i)
   
   tt = pya.Trans(0,80000)
-  poly = a.number("0")
+  poly = a.number("0123456789")
   for i in range(len(poly)):
     cell.shapes(layer).insert(tt.trans(poly[i]))
   
-  tt = pya.Trans(0,90000)
+  tt = pya.Trans(0,100000)
   poly = a.number("0")
   for i in range(len(poly)):
     poly[i] = tt.trans(poly[i])
