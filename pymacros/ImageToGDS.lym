@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <description>Image to GDS</description>
+ <version/>
+ <category>pymacros</category>
+ <prolog/>
+ <epilog/>
+ <doc/>
+ <autorun>false</autorun>
+ <autorun-early>false</autorun-early>
+ <shortcut/>
+ <show-in-menu>true</show-in-menu>
+ <group-name/>
+ <menu-path>macros_menu.my_group&gt;end("LTK").end</menu-path>
+ <interpreter>python</interpreter>
+ <dsl-interpreter-name/>
+ <text>import pya
+import numpy as np
+import matplotlib.image as mpimg
+
+class imageToGDS(pya.QDialog):
+  """
+  Provides a dialog box interface to convert an image to a GDS layout
+  """
+  def __init__(self, parent = None):
+   #Dialog Box constructor
+    super(imageToGDS, self).__init__()
+    #Stores the image data
+    self.image = None
+    #Initialize GUI elements
+    self.initGUI()
+    #Lay out GUI elements
+    self.initLayout()
+    #Connect GUI elements to functions
+    self.initConnection()
+  
+  def initGUI(self):
+    #Initialize GUI elements
+    
+    #Sets the window title
+    self.setWindowTitle("Image to GDS Converter")
+    #Sets the dialog box size 
+    self.resize(350, 120)
+
+    #Create label elements
+    self.labelThreshold = pya.QLabel('Threshold [%]: ', self)
+    
+    #Create spinbox elements
+    self.sbThreshold = pya.QSpinBox(self)
+    self.sbThreshold.setRange(1,99)
+    self.sbThreshold.setValue(50)
+    self.sbThreshold.setFixedWidth(50)
+    
+    #Create button element
+    self.bFileBrowser = pya.QPushButton(self)
+    self.bFileBrowser.setText('Select An Image File')
+    
+    self.bConvert = pya.QPushButton(self)
+    self.bConvert.setText('Convert')
+    self.bConvert.setToolTip('Estimates the write time for the active cell')
+    
+    #Create file dialog element
+    self.fd = pya.QFileDialog(self)
+    self.fd.setViewMode(self.fd.List)
+    
+  def initLayout(self):
+    #Lay out GUI elements  
+    
+    #Line up elements horizontally
+    self.hlFileBrowser = pya.QHBoxLayout()
+    self.hlFileBrowser.addWidget(self.bFileBrowser)        
+    
+    #Line up elements horizontally    
+    self.hlThreshold = pya.QHBoxLayout()
+    self.hlThreshold.addWidget(self.labelThreshold)
+    self.hlThreshold.addStretch()
+    self.hlThreshold.addWidget(self.sbThreshold)
+    
+    #Line up elements vertically    
+    self.verticalLayout = pya.QVBoxLayout(self)
+    self.verticalLayout.addLayout(self.hlFileBrowser)
+    self.verticalLayout.addLayout(self.hlThreshold)
+    self.verticalLayout.addWidget(self.bConvert)
+    
+    #Set the layout
+    self.setLayout(self.verticalLayout)
+  
+  def initConnection(self):
+    #Connect GUI elements to functions
+    
+    #When bFileBrowser is clicked, execute the function loadImage()
+    self.bFileBrowser.clicked(self.loadImage)
+    
+    #When bConvert is clicked, execute the function convert()
+    self.bConvert.clicked(self.convert)
+  
+  def loadImage(self):
+    '''
+    loadImage()
+      
+    Opens a file browser interface to select and load an image file
+      
+    Parameters
+    ---------
+    filename : From Interface
+              The absolute file path to the image
+      
+    Returns
+    ------
+    image : np.ndarray
+              The loaded image file
+    
+    Description
+    ---------
+    The image is loaded using matplotlib.image.imread(). The documentation does not specify the supported
+    format.
+    '''
+    #If the file browser is executed
+    if self.fd.exec_():
+        #Get the path of the selected file
+        filename = self.fd.selectedFiles()
+        try:
+          #Load the image
+          self.image = mpimg.imread(filename[0])
+        except:
+          #Raise an error if the image format isn't supported
+          raise Exception("The selected file (" +  filename[0].split('/')[-1] + ")is not a supported image format")
+    
+  def convert(self, checked):
+    '''
+    convert()
+      
+    Converts the image into a GDS layout
+      
+    Parameters
+    ---------
+    Threshold : From Interface
+              Pixels below the threshold will be converted to a GDS pixel
+      
+    Returns
+    ------
+    Image : A Cell
+              A GDS layout of the image will be stored in a cell named Image and be made the active cell
+    
+    Description
+    ---------
+    This function converts an image into grayscale. Then a threshold is applied to convert the grayscale
+    image into a binary image. Finally each pixel in the binary image is converted into a 1 um square
+    in a GDS layout.
+    '''
+    if self.image == None:
+      raise Exception("Please select an image file first")
+    
+    self.bConvert.setText('Converting... Please Wait')
+    self.repaint()
+    
+    #Gets a reference to the cell view
+    cv = pya.CellView().active()
+    
+    #Gets a reference to the active layout
+    layout = cv.layout()
+    layer = layout.layer(1,0)
+
+    #Gets the active cell
+    cell = layout.create_cell('Image')
+    
+    #If image is not grayscale, then convert it to grayscale
+    if len(self.image.shape) &gt; 2:
+      r, g, b = self.image[:,:,0], self.image[:,:,1], self.image[:,:,2]
+      self.image = 0.299*r + 0.587*g + 0.114*b
+    
+    #Create a pixel polygon
+    w = int(1/layout.dbu)
+    poly = pya.Box(0,0,w,w)
+    
+    #Locate all pixels that pass the threshold
+    pos = np.argwhere(self.image &lt; float(self.sbThreshold.value)/100)*w
+    #Insert pixel polygons into the cell
+    for i in pos:
+      t = pya.Trans(i[1],-i[0])
+      cell.shapes(layer).insert(t.trans(poly))   
+    
+    #Select all polygons in the cell
+    region = pya.Region.new(cell.begin_shapes_rec(layer))
+    #Merge selected polygons
+    region.merge()
+    #Clear the cell
+    cell.clear()
+    #Insert the merged polygons into the cell
+    cell.shapes(layer).insert(region)
+          
+    #Close the dialog box
+    self.close()
+    
+    #Make the image layout the active cell
+    cv.cell = cell
+
+# Instantiate the dialog and make it visible initially.
+# Passing the main_window will make it stay on top of the main window.
+dialog = imageToGDS(pya.Application.instance().main_window())
+dialog.show()
+</text>
+</klayout-macro>

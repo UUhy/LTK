@@ -23,10 +23,9 @@ from fieldMarker import fieldMarker
 from shape import shape
 from alignmentMark import alignmentMark
 
-
 class LTK(pya.Library):
   """
-  The library where we will put the PCell into 
+  Creates a library with PCells
   """
 
   def __init__(self):
@@ -36,10 +35,10 @@ class LTK(pya.Library):
     
     # Create the PCell declarations
     self.layout().register_pcell("Alignment Mark", alignmentMark())
-    self.layout().register_pcell("Alignment Vernier", vernier())
-    self.layout().register_pcell("Alignment Cross", cross())
-    self.layout().register_pcell("Jeol Dose Series", doseSeries())
-    self.layout().register_pcell("Jeol Field Marker", fieldMarker())
+    self.layout().register_pcell("Shape: Vernier", vernier())
+    self.layout().register_pcell("Shape: Cross", cross())
+    self.layout().register_pcell("Jeol: Dose Series", doseSeries())
+    self.layout().register_pcell("Jeol: Field Marker", fieldMarker())
     
     # Register the library
     self.register("LTK")

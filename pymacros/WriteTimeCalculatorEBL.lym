@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <description>Write Time Calculator</description>
+ <version/>
+ <category>pymacros</category>
+ <prolog/>
+ <epilog/>
+ <doc/>
+ <autorun>false</autorun>
+ <autorun-early>false</autorun-early>
+ <shortcut/>
+ <show-in-menu>true</show-in-menu>
+ <group-name/>
+ <menu-path>macros_menu.my_group&gt;end("LTK").end</menu-path>
+ <interpreter>python</interpreter>
+ <dsl-interpreter-name/>
+ <text>import pya
+
+class calcWriteTimeEBL(pya.QDialog):
+  """
+  Provides a dialog box interface to calculate the write time of the active cell
+  """
+  def __init__(self, parent = None):
+    #Dialog Box constructor
+    super(calcWriteTimeEBL, self).__init__()
+    #Initialize GUI elements
+    self.initGUI()
+    #Lay out GUI elements
+    self.initLayout()
+    #Connect GUI elements to functions
+    self.initConnection()
+  
+  def initGUI(self):
+    #Initialize GUI elements
+    
+    #Sets the window title
+    self.setWindowTitle("Write Time Calculator: EBL")
+    #Sets the dialog box size 
+    self.resize(350, 120)
+
+    #Create labels
+    self.labelInstruction = pya.QLabel('This macro estimates the writetime for the active cell', self)
+    self.labelBeamCurrent = pya.QLabel('Beam Current [nA]: ', self)
+    self.labelDose = pya.QLabel('Dose [uC/cm2]: ', self)
+    #These labels are hidden initially
+    self.labelLayer = pya.QLabel('', self)
+    self.labelArea = pya.QLabel('', self)
+    self.labelTime = pya.QLabel('', self)
+
+    #Create text inputs
+    self.leBeamCurrent = pya.QLineEdit("1", self)
+    self.leBeamCurrent.setFixedWidth(50)
+    self.leBeamCurrent.setToolTip('Higher beam current reduces cost (write time) at the expense of pattern fidelity (resolution)\n\n0.1 [nA]\ttypically used for sub-20nm resolution\n1 [nA]\tprovides reasonable speed and with sub-100nm resolution\n&gt;1 [nA]\texplore to reduce write time and achieve acceptable resolution')        
+        
+    self.leDose = pya.QLineEdit("500", self)
+    self.leDose.setFixedWidth(50)
+    self.leDose.setToolTip('The actual dose to produce high fidelity prints depend on many factors.\n\nPrint the same pattern at various dosages around the critical dose to\ndetermine the lowest dose for the desired pattern.\n\nThe critical dose [uC/cm2] for various eBeam resist is:\nPMMA:\t\t350\nHSQ:\t\t700')
+        
+    #Create a button
+    self.bCalc = pya.QPushButton(self)
+    self.bCalc.setText('Estimate Write Time')
+    self.bCalc.setToolTip('Estimates the write time for the active cell')
+    
+  def initLayout(self):  
+    #Lay out GUI elements  
+    
+    #Line up elements horizontally
+    self.hlInstruction = pya.QHBoxLayout()
+    self.hlInstruction.addWidget(self.labelInstruction)        
+    
+    #Line up elements horizontally    
+    self.hlBeamCurrent = pya.QHBoxLayout()
+    self.hlBeamCurrent.addWidget(self.labelBeamCurrent)
+    self.hlBeamCurrent.addStretch()
+    self.hlBeamCurrent.addWidget(self.leBeamCurrent)
+    
+    #Line up elements horizontally    
+    self.hlDose = pya.QHBoxLayout()
+    self.hlDose.addWidget(self.labelDose)
+    self.hlDose.addStretch()
+    self.hlDose.addWidget(self.leDose)
+    
+    #Line up elements horizontally
+    self.hlResult = pya.QHBoxLayout()
+    self.hlResult.addWidget(self.labelLayer)
+    self.hlResult.addStretch()
+    self.hlResult.addWidget(self.labelArea)
+    self.hlResult.addStretch()
+    self.hlResult.addWidget(self.labelTime)
+    
+    #Line up elements vertically    
+    self.verticalLayout = pya.QVBoxLayout(self)
+    self.verticalLayout.addWidget(self.labelInstruction)
+    self.verticalLayout.addLayout(self.hlBeamCurrent)
+    self.verticalLayout.addLayout(self.hlDose)
+    self.verticalLayout.addWidget(self.bCalc)
+    self.verticalLayout.addLayout(self.hlResult)
+    
+    #Set the layout
+    self.setLayout(self.verticalLayout)
+  
+  def initConnection(self):
+    #Connect GUI elements to functions
+    
+    #When bCalc is clicked, execute the function calc()
+    self.bCalc.clicked(self.calc)
+    
+  def calc(self):
+    '''
+    calc()
+      
+    Calculates the write time and displays it
+      
+    Parameters
+    ---------
+    The parameters are acquired from the dialog box interface
+      
+    Returns
+    ------
+    The results are shown in the dialog box interface
+    
+    Description
+    ---------
+    This function calculates the minimal write time for EBL
+    The actual write time is longer due to time spent on beam
+    blanking and stage moves
+    '''
+    
+    #Gets a reference to the cell view
+    cv = pya.CellView().active()
+    
+    #Gets a reference to the active layout
+    layout = cv.layout()
+
+    #Gets the active cell
+    cell = cv.cell
+  
+    # Gets a list of all the layers in the layout
+    layerList = layout.layer_infos()
+    
+    # Sort the layer list in ascending order
+    sLayerList = []
+    for i in layerList:
+      sLayerList.append(i.to_s())
+    sIndex = sorted(range(len(sLayerList)), key=sLayerList.__getitem__)
+    layerList = [layerList[i] for i in sIndex]
+
+    # Gets the current and dose values
+    current = float(self.leBeamCurrent.text)
+    dose = float(self.leDose.text)
+
+    result = []
+    #Calculate area and write time for each layer
+    for i in layerList:
+      area = 0
+      #Get the shape iterator referencing all shapes inside the cell
+      shapes = layout.begin_shapes(cell, layout.layer(i))
+      #While the shape iterator has not ended
+      while not shapes.at_end():
+        #Accumulate the area of all shapes
+        area += shapes.shape().darea()
+        #Go to the next shape in the iterator
+        shapes.next()
+      #Convert area from um2 to mm2
+      area = area / 1000000
+      #Calculate the write time in seconds
+      writeTime = dose*area/current*10
+      result.append([i, area, writeTime])
+
+    #Display the results
+    layerText = "Layer/Datatype"
+    areaText = "Area [mm2]"
+    timeText = "Write Time"
+    
+    for i in result:
+      if i[1] == 0:
+        continue
+      layerText += "\n" + str(i[0])
+      areaText += "\n" + str("%0.3f" % i[1])
+      timeText += "\n" + self.getSecondsToTime(i[2])
+      
+    self.labelLayer.setText(layerText)
+    self.labelArea.setText(areaText)
+    self.labelTime.setText(timeText)
+  
+  def getSecondsToTime(self, seconds):
+    '''
+    getSecondsToTime(seconds)
+      
+    Converts seconds to HH:MM:SS
+      
+    Parameters
+    ---------
+    seconds : integer
+          The time in seconds
+      
+    Returns
+    ------
+    time : string
+           The time formatted in HH:MM:SS
+    '''
+    hours = seconds // 3600
+    seconds %= 3600
+    minutes = seconds // 60
+    seconds %= 60
+    return "%02i:%02i:%02i" % (hours, minutes, seconds)
+
+# Instantiate the dialog and make it visible initially.
+# Passing the main_window will make it stay on top of the main window.
+dialog = calcWriteTimeEBL(pya.Application.instance().main_window())
+dialog.show()
+</text>
+</klayout-macro>
