@@ -17,13 +17,32 @@
 import pya
 
 class shape(object):
-  '''
-  Shape class : subclass of object
-  
-  The shape class is used to generate various shapes
-  
-  The shape class contains the following functions:
-  '''
+  '''      
+    A collection of functions for generating various shapes
+      
+    Parameters
+    ---------
+    layout : pya.Layout
+              The layout where the cell reside
+    cell : pya.Cell
+              The cell where the shape reside
+    layer : pya.Layout.layer
+              The layer/datatype for the shape
+    textNumber : [pya.Polygon]
+              A list of polygons representing numbers
+      
+    Returns
+    ------
+    shape [pya.Polygon]
+    
+    Functions
+    --------
+    cross
+    vernier
+    number
+    inverse
+    
+    '''
   def __init__(self):
     layout = pya.Layout()
     self.layout = layout

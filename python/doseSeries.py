@@ -1,4 +1,4 @@
-# Vernier Pattern PCell for Klayout
+# Dose Series PCell for Klayout
 # Copyright (C) 2021  Long Chang
 #
 # This program is free software: you can redistribute it and/or modify
@@ -22,17 +22,17 @@ class doseSeries(pya.PCellDeclarationHelper):
     
   Parameters
   ---------
-  layer : pya.LayerInfo (default = pya.LayerInfo(1,0))
+  layer : from interface
         The layer and datatype for the patterns
-  cellName : String (default = "pattern")
+  cellName : from interface
         The name of the cell
-  pitchX : double (default = 200)
+  pitchX : from interface
         The horizontal space between each pattern
-  pitchY : Double (default = 200)
+  pitchY : from interface
         The vertical space between each pattern
-  nX : integer (default = 3)
+  nX : from interface
         The number of repeats along X
-  nY : integer (default = 3)
+  nY : from interface
         The number of repeats along Y
           
   Description

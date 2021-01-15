@@ -1,4 +1,4 @@
-# Vernier Pattern PCell for Klayout
+# Field Marker PCell for Klayout
 # Copyright (C) 2021  Long Chang
 #
 # This program is free software: you can redistribute it and/or modify
@@ -22,9 +22,9 @@ class fieldMarker(pya.PCellDeclarationHelper):
     
   Parameters
   ---------
-  cellName : String (default = "pattern")
+  cellName : from interface
         The name of the cell
-  fieldSize : integer (default = 1000)
+  fieldSize : from interface
         The field size for the JBX-5500FS Electron Beam Writer
           
   Description

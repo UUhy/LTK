@@ -1,4 +1,4 @@
-# Vernier Pattern PCell for Klayout
+# Cross PCell for Klayout
 # Copyright (C) 2021  Long Chang
 #
 # This program is free software: you can redistribute it and/or modify
@@ -23,15 +23,15 @@ class cross(pya.PCellDeclarationHelper):
     
   Parameters
   ---------
-  layer : pya.LayerInfo (default = pya.LayerInfo(1,0))
+  layer : from interfance
         The layer and datatype for the patterns
-  width : double (default = 4)
+  width : from interface
         The width of each tick mark
-  length : double (default = 40)
+  length : from interface
         The length of the central tick mark
-  inverse : boolean (default = False)
-        Invert the pattern?
-  border : double (default = 10)
+  inverse : from interface
+        Invert the pattern
+  border : from interface
         The space between the bounding box and the inverted pattern
           
   Description

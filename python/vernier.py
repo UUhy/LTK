@@ -23,17 +23,17 @@ class vernier(pya.PCellDeclarationHelper):
     
   Parameters
   ---------
-  layer : pya.LayerInfo (default = pya.LayerInfo(1,0))
+  layer : from interface
         The layer and datatype for the patterns
-  width : double (default = 4)
+  width : from interface
         The width of each tick mark
-  length : double (default = 40)
+  length : from interface
         The length of the central tick mark
-  pitch : double (default = 8)
+  pitch : from interface
         The distance between neighboring tick marks
-  inverse : boolean (default = False)
+  inverse : from interface
         Invert the pattern?
-  border : double (default = 10)
+  border : from interface
         The space between the bounding box and the inverted pattern
           
   Description

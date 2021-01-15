@@ -1,4 +1,4 @@
-# Vernier Pattern PCell for Klayout
+# Alignment Mark Pattern PCell for Klayout
 # Copyright (C) 2021  Long Chang
 #
 # This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,40 @@ from shape import shape
 
 class alignmentMark(pya.PCellDeclarationHelper):
   '''
-  Alignment Mark PCell
+  alignmentMark()
+    
+  Generates an alignment mark with a cross and vernier patterns
+    
+  Parameters
+  ---------
+  layer : from interface
+            The layer/datatype for the pattern
+  type : from interface
+            Specify the mark type as Wafer or Mask
+  mask : from interface
+            Specify the mask type as Dark Field or Light Field
+  num : from interface
+            Specify the mask number
+  res : from interface
+            Specify the alignment resolution        
+    
+  Returns
+  ------
+  pcell : PCell
+            A PCell containing the alignment mark
+  
+  Description
+  ---------
+  Creates a PCell for alignment mark patterns for photolithography
+  There are 2 types of alignment marks:
+    Wafer marks are used to print alignment marks on the wafer, but not used for alignment
+    Mask marks are used to align to an alignment mark
+      Mask marks should facilitate the alignment process so it must contain minimal opaque patterns
+      Mask mark patterns differ depending on whether the mask is Dark Field or Light Field
+        Dark Field masks means polygons are transparent
+        Light Field masks means polygons are opaque
+  
+  This is our preferred alignment mark. Perhaps we can add other variants in the future.
   '''
   def __init__(self):
     super(alignmentMark, self).__init__()
