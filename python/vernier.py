@@ -79,13 +79,9 @@ class vernier(pya.PCellDeclarationHelper):
     
     # Create the vernier pattern
     s = shape()
-    poly = s.vernier(w,l,p)
+    region = s.vernier(w,l,p)
     
     if (self.inverse):
-      poly = s.inverse(poly,b)
-      for i in poly:
-        self.cell.shapes(self.layer_layer).insert(i)
-      #self.cell.shapes(self.layer_layer).insert(poly)
-    else:
-      for i in poly:
-        self.cell.shapes(self.layer_layer).insert(i)
+      region = s.inverse(region,b)
+
+    self.cell.shapes(self.layer_layer).insert(region)

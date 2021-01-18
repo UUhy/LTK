@@ -28,93 +28,19 @@ class shape(object):
               The cell where the shape reside
     layer : pya.Layout.layer
               The layer/datatype for the shape
-    textNumber : [pya.Polygon]
-              A list of polygons representing numbers
-      
-    Returns
-    ------
-    shape [pya.Polygon]
     
     Functions
     --------
     cross
     vernier
-    number
+    text
     inverse
-    
     '''
   def __init__(self):
     layout = pya.Layout()
     self.layout = layout
     self.cell = layout.create_cell("shape")
     self.layer = layout.layer(1,0)
-    self.textNumber = []
-    #Number 0
-    self.textNumber.append(pya.Polygon([pya.Point(1000,0), pya.Point(0,1000), pya.Point(0,6000), pya.Point(1000,7000), 
-      pya.Point(4000,7000), pya.Point(5000,6000), pya.Point(1500,6000), pya.Point(1000,5500),
-      pya.Point(1000,1500), pya.Point(1500,1000), pya.Point(3500,1000), pya.Point(4000,1500),
-      pya.Point(4000,5500), pya.Point(3500,6000), pya.Point(5000,6000), pya.Point(5000,1000),
-      pya.Point(4000,0)]))
-    #Number 1
-    self.textNumber.append(pya.Polygon([pya.Point(0,0), pya.Point(0,1000), pya.Point(2000,1000), pya.Point(2000,5000), 
-      pya.Point(1500,5000), pya.Point(500,4000), pya.Point(0,4000), pya.Point(0,5000),
-      pya.Point(2000,7000), pya.Point(3000,7000), pya.Point(3000,1000), pya.Point(5000,1000),
-      pya.Point(5000,0)]))
-    #Number 2
-    self.textNumber.append(pya.Polygon([pya.Point(0,0), pya.Point(0,2500), pya.Point(1000,3500), pya.Point(3500,3500), 
-      pya.Point(4000,4000), pya.Point(4000,5500), pya.Point(3500,6000), pya.Point(1500,6000),
-      pya.Point(1000,5500), pya.Point(1000,5000), pya.Point(0,5000), pya.Point(0,6000),
-      pya.Point(1000,7000), pya.Point(4000,7000), pya.Point(5000,6000), pya.Point(5000,3500),
-      pya.Point(4000,2500), pya.Point(1500,2500), pya.Point(1000,2000), pya.Point(1000,1000),
-      pya.Point(5000,1000), pya.Point(5000,0)]))
-    #Number 3
-    self.textNumber.append(pya.Polygon([pya.Point(1000,0), pya.Point(0,1000), pya.Point(0,2000), pya.Point(1000,2000), 
-      pya.Point(1000,1500), pya.Point(1500,1000), pya.Point(3500,1000), pya.Point(4000,1500),
-      pya.Point(4000,2500), pya.Point(3500,3000), pya.Point(2000,3000), pya.Point(2000,4000),
-      pya.Point(3500,4000), pya.Point(4000,4500), pya.Point(4000,5500), pya.Point(3500,6000),
-      pya.Point(1500,6000), pya.Point(1000,5500), pya.Point(1000,5000), pya.Point(0,5000),
-      pya.Point(0,6000), pya.Point(1000,7000), pya.Point(4000,7000), pya.Point(5000,6000),
-      pya.Point(5000,4000), pya.Point(4500,3500), pya.Point(5000,3000), pya.Point(5000,1000),
-      pya.Point(4000,0)]))
-    #Number 4
-    self.textNumber.append(pya.Polygon([pya.Point(3000,0), pya.Point(3000,1500), pya.Point(0,1500), pya.Point(0,2500), 
-      pya.Point(3000,2500), pya.Point(3000,5000), pya.Point(2500,5000), pya.Point(1000,3500),
-      pya.Point(1000,2500), pya.Point(0,2500), pya.Point(0,4000), pya.Point(3000,7000),
-      pya.Point(4000,7000), pya.Point(4000,2500), pya.Point(5000,2500), pya.Point(5000,1500),
-      pya.Point(4000,1500), pya.Point(4000,0)]))
-    #Number 5
-    self.textNumber.append(pya.Polygon([pya.Point(1000,0), pya.Point(0,1000), pya.Point(0,2000), pya.Point(1000,2000), 
-      pya.Point(1000,1500), pya.Point(1500,1000), pya.Point(3500,1000), pya.Point(4000,1500), pya.Point(4000,3000),
-      pya.Point(3500,3500), pya.Point(0,3500), pya.Point(0,7000), pya.Point(5000,7000), pya.Point(5000,6000),
-      pya.Point(1000,6000), pya.Point(1000,4500), pya.Point(4000,4500), pya.Point(5000,3500), pya.Point(5000,1000),
-      pya.Point(4000,0)]))
-    #Number 6
-    self.textNumber.append(pya.Polygon([pya.Point(1000,0), pya.Point(0,1000), pya.Point(0,5000), pya.Point(2000,7000), 
-      pya.Point(4000,7000), pya.Point(4000,6000), pya.Point(2500,6000), pya.Point(1500,5000),
-      pya.Point(1500,4500), pya.Point(4000,4500), pya.Point(5000,3500), pya.Point(1500,3500),
-      pya.Point(1000,3000), pya.Point(1000,1500), pya.Point(1500,1000), pya.Point(3500,1000),
-      pya.Point(4000,1500), pya.Point(4000,3000), pya.Point(3500,3500), pya.Point(5000,3500),
-      pya.Point(5000,1000), pya.Point(4000,0)]))
-    #Number 7
-    self.textNumber.append(pya.Polygon([pya.Point(2000,0), pya.Point(2000,3500), pya.Point(4000,5500), pya.Point(4000,6000), 
-      pya.Point(0,6000), pya.Point(0,7000), pya.Point(5000,7000), pya.Point(5000,5000),
-      pya.Point(3000,3000), pya.Point(3000,0)]))
-    #Number 8
-    self.textNumber.append(pya.Polygon([pya.Point(1000,0), pya.Point(0,1000), pya.Point(0,3000), pya.Point(500,3500), 
-      pya.Point(0,4000), pya.Point(0,6000), pya.Point(1000,7000), pya.Point(4000,7000),
-      pya.Point(5000,6000), pya.Point(1500,6000), pya.Point(1000,5500), pya.Point(1000,4500),
-      pya.Point(1500,4000), pya.Point(3500,4000), pya.Point(4000,4500), pya.Point(4000,5500),
-      pya.Point(3500,6000), pya.Point(5000,6000), pya.Point(5000,4000), pya.Point(4500,3500),
-      pya.Point(5000,3000), pya.Point(1500,3000), pya.Point(1000,2500), pya.Point(1000,1500),
-      pya.Point(1500,1000), pya.Point(3500,1000), pya.Point(4000,1500), pya.Point(4000,2500),
-      pya.Point(3500,3000), pya.Point(5000,3000), pya.Point(5000,1000), pya.Point(4000,0)]))
-    #Number 9
-    self.textNumber.append(pya.Polygon([pya.Point(1000,0), pya.Point(1000,1000), pya.Point(2500,1000), pya.Point(3500,2000), 
-      pya.Point(3500,2500), pya.Point(1000,2500), pya.Point(0,3500), pya.Point(3500,3500),
-      pya.Point(4000,4000), pya.Point(4000,5500), pya.Point(3500,6000), pya.Point(1500,6000),
-      pya.Point(1000,5500), pya.Point(1000,4000), pya.Point(1500,3500), pya.Point(0,3500),
-      pya.Point(0,6000), pya.Point(1000,7000), pya.Point(4000,7000), pya.Point(5000,6000),
-      pya.Point(5000,2000), pya.Point(3000,0)]))
     
   def __repr__(self):
     return ''
@@ -134,8 +60,8 @@ class shape(object):
     
     Returns
     ------
-    polygon : pya.Polygon
-         A KLayout polygon representing the cross
+    region : pya.Region
+         A region containing the cross
     
     Description
     ---------
@@ -156,7 +82,7 @@ class shape(object):
       pya.Point(-wh,wh), pya.Point(-wh,lh), pya.Point(wh,lh), pya.Point(wh,wh),
       pya.Point(lh,wh), pya.Point(lh,-wh), pya.Point(wh,-wh), pya.Point(wh,-lh)])
     
-    return polygon
+    return pya.Region(polygon)
 
   def vernier(self, width, length, pitch):
     '''
@@ -177,8 +103,8 @@ class shape(object):
     
     Returns
     ------
-    polygons : [pya.Polygon]
-         A list of polygons comprising the vernier scale
+    region : [pya.Region]
+         A region containing the vernier scale
     
     Description
     ---------
@@ -210,49 +136,41 @@ class shape(object):
       tt = pya.Trans(0,int(i*pitch))
       polygons.append(tc.trans(tt.trans(ticks)))
       
-    return polygons
-
-  def number(self, num, center = True):
+    return pya.Region(polygons)
+  
+  def text(self, text, center = True):
     '''
-    number(num)
+    text(text, center)
     
-    Generates a number
+    Generates a text shape
     
     Parameters
     ---------
-    number : string
-          A string numbers
+    text : string
+          The text to be converted to shapes
     center : boolen (default = True)
-          Centers the polygon at (0,0)
+          Centers the region at (0,0)
     
     Returns
     ------
-    polygon : [pya.Polygon]
-         A KLayout polygon representing the number
+    region : pya.Region
+         A region containing the text
     
     Description
     ---------
-    The parameters of a single digit is (cell width = 6, cell height = 8, line width = 1, design raster = 0.5, unit = micron)
-    
-    1/8/2021 Ideally want to insert Basic.TEXT PCell to generate text, but it was supported
+    Uses the default text generator to create the text where each character is
+    (cell width = 6, cell height = 8, line width = 1, design raster = 0.5, unit = micron)
     '''
-    if isinstance(num, int):
-      num = str(num)
-    poly = []
-    counter = 0
-    for i in num:
-      tt = pya.Trans(counter*6000,0)
-      poly.append(tt.trans(self.textNumber[int(i)]))
-      counter += 1
+
+    region = pya.TextGenerator.default_generator().text(text, 0.001,10)
     
     if center:
-      tt = pya.Trans(-counter*6000/2+500,-3500)
-      for i in range(counter):
-        poly[i] = tt.trans(poly[i])
-    
-    return poly
+      p = region.bbox().center()
+      region.move(-p.x,-p.y)
+      
+    return region
   
-  def inverse(self, polygons, width, enlarge = True):
+  def inverse(self, region, width, enlarge = True):
     '''
     inverse(polygons, length, boxLength)
     
@@ -260,8 +178,8 @@ class shape(object):
     
     Parameters
     ---------
-    cell : [pya.Polygon]
-          A list of polygons
+    region : pya.Region
+          A region containg polygons
     width : integer
           The width of the bounding box
     enlarge : boolean (default = True)
@@ -269,30 +187,17 @@ class shape(object):
     
     Returns
     ------
-    iPolygon : [pya.Polygon]
-         The inverted polygons
+    iRegion : pya.Region
+         The inverted region
     
     Description
     ---------
     An inverted pattern is often useful in photolithography and ebeam lithography
     '''
-    if not isinstance(polygons,list):
-      polygons = [polygons]
+    regionBox = pya.Region.new(region.bbox().enlarged(width,width))
+    iRegion = regionBox-region
     
-    self.cell.clear()
-    for i in polygons:
-      self.cell.shapes(self.layer).insert(i)
-    region1 = pya.Region.new(self.cell.bbox().enlarged(width,width))
-    region2 = pya.Region.new(self.cell.begin_shapes_rec(self.layer))
-    region3 = region1-region2
-    self.cell.clear()
-    self.cell.shapes(self.layer).insert(region3)
-    #self.cell.flatten
-    iPolygon = []
-    for i in self.cell.shapes(self.layer).each():
-      iPolygon.append(i)
-    
-    return iPolygon
+    return iRegion
 
 def testKLayout():
   #This performs a simple test of the class and draws the result on the active layout in KLayout
@@ -321,42 +226,36 @@ def testKLayout():
   a = shape()
   
   #Creates a cross and insert it into the test cell
-  poly = a.cross(10/dbu,100/dbu)
-  cell.shapes(layer).insert(poly)
+  region = a.cross(10/dbu,100/dbu)
+  cell.shapes(layer).insert(region)
   
   #Creates an inverted cross and insert it into the test cell
-  poly = a.cross(14/dbu,104/dbu)
-  poly = a.inverse(poly,10/dbu)
-  for i in poly:
-    cell.shapes(layer).insert(i)
+  region = a.cross(14/dbu,104/dbu)
+  region = a.inverse(region,10/dbu)
+  cell.shapes(layer).insert(region)
   
   #Creates a vernier pattern and inserts it into the test cell
   tt = pya.Trans(-100000,0)
-  poly = a.vernier(4/dbu, 40/dbu, 8.2/dbu)
-  for i in poly:
-    cell.shapes(layer).insert(tt.trans(i))
+  region = a.vernier(4/dbu, 40/dbu, 8.2/dbu)
+  region.transform(tt)
+  cell.shapes(layer).insert(region)
   
   #Creates an inverse vernier pattern and inserts it into the test cell
   tt = pya.Trans(2, False, -160000,0)
-  poly = a.vernier(4/dbu, 40/dbu, 8/dbu)
-  for i in range(len(poly)):
-    poly[i] = tt.trans(poly[i])
-  poly = a.inverse(poly, 10/dbu)
-  for i in poly:
-    cell.shapes(layer).insert(i)
+  region = a.vernier(4/dbu, 40/dbu, 8/dbu)
+  region = a.inverse(region, 10/dbu)
+  cell.shapes(layer).insert(region,tt)
   
   tt = pya.Trans(0,80000)
-  poly = a.number("0123456789")
-  for i in range(len(poly)):
-    cell.shapes(layer).insert(tt.trans(poly[i]))
+  region = a.text("0123456789 Hello")
+  cell.shapes(layer).insert(region,tt)
   
   tt = pya.Trans(0,100000)
-  poly = a.number("0")
-  for i in range(len(poly)):
-    poly[i] = tt.trans(poly[i])
-  poly = a.inverse(poly, 10/dbu)
-  for i in poly:
-    cell.shapes(layer).insert(i)
+  region = a.text("0123456789")
+  region = a.inverse(region, 10/dbu)
+  cell.shapes(layer).insert(region,tt)
+  
+  cv.cell = cell
 
 if __name__ == '__main__':
   #This function will automatically run if Python is running this file

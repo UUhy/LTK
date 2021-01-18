@@ -75,10 +75,9 @@ class cross(pya.PCellDeclarationHelper):
     
     # Create the cross
     s = shape()
-    poly = s.cross(w,l)
+    region = s.cross(w,l)
     
     if (self.inverse):
-      poly = s.inverse(poly,b)
-      poly = poly[0]
+      region = s.inverse(region,b)
    
-    self.cell.shapes(self.layer_layer).insert(poly)
+    self.cell.shapes(self.layer_layer).insert(region)

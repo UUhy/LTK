@@ -110,70 +110,57 @@ class alignmentMark(pya.PCellDeclarationHelper):
     s = shape()
     
     #Creates a cross
-    t = pya.Trans(cPos)
-    cross = t.trans(s.cross(cWidth/dbu, cLength/dbu))
+    #t = pya.Trans(cPos)
+    cross = s.cross(cWidth/dbu, cLength/dbu)
+    cross.transform(pya.Trans(cPos))
     
     #Creates an inverted cross
-    t = pya.Trans(cPos)
-    poly = t.trans(s.cross((cWidth+2*cGap)/dbu, (cLength + 2*cGap)/dbu))
-    icross = s.inverse(poly, cBorder/dbu)
+    icross = s.cross((cWidth+2*cGap)/dbu, (cLength + 2*cGap)/dbu)
+    icross.transform(pya.Trans(cPos))
+    icross = s.inverse(icross, cBorder/dbu)
     
     #Create Vernier Left 1
     vLeft1 = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu)
-    t = pya.Trans(vPosL)
-    for i in range(len(vLeft1)):
-      vLeft1[i] = t.trans(vLeft1[i])
+    vLeft1.transform(pya.Trans(vPosL))
     
     #Create Vernier Bottom 1
     vBot1 = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu)
-    t = pya.Trans(1, False, vPosB.x, vPosB.y)
-    for i in range(len(vBot1)):
-      vBot1[i] = t.trans(vBot1[i])
+    vBot1.transform(pya.Trans(1, False, vPosB.x, vPosB.y))
 
     #Create Vernier Left 2
     vLeft2 = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu+self.res/dbu)
-    t = pya.Trans(2, False, vPosL.x-vLength/dbu-vGap/dbu, vPosL.y)
-    for i in range(len(vLeft2)):
-      vLeft2[i] = t.trans(vLeft2[i])
+    vLeft2.transform(pya.Trans(2, False, vPosL.x-vLength/dbu-vGap/dbu, vPosL.y))
     
     #Create Vernier Bottom 2
     vBot2 = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu+self.res/dbu)
-    t = pya.Trans(3, False, vPosB.x, vPosB.y-vLength/dbu-vGap/dbu)
-    for i in range(len(vBot2)):
-      vBot2[i] = t.trans(vBot2[i])
+    vBot2.transform(pya.Trans(3, False, vPosB.x, vPosB.y-vLength/dbu-vGap/dbu))
     
     #Create Mask Number for Wafer and Mask
-    tm = pya.CplxTrans(mLineWidth)
-    tl = pya.Trans(mPosL)
-    tr = pya.Trans(mPosR)
-    mn = s.number(str(self.num))
-    mnLeft = []
-    mnRight = []
-    for i in range(len(mn)):
-      mnLeft.append(tl.trans(tm.trans(mn[i])))
-      mnRight.append(tr.trans(tm.trans(mn[i])))
+    tl = pya.CplxTrans(mLineWidth, 0, False, mPosL.x, mPosL.y)
+    tr = pya.CplxTrans(mLineWidth, 0, False, mPosR.x, mPosR.y)
+    mnLeft = s.text(self.num).transform(tl)
+    mnRight = s.text(self.num).transform(tr)
     
-    #Create sthe Wafer Alignment Mark
-    poly = []
+    #Creates the Wafer Alignment Mark
+    region = pya.Region()
     if self.type == 0:
-      poly.extend(icross)
-      poly.extend(vLeft1)
-      poly.extend(vBot1)
-      poly.extend(mnLeft)
+      region.insert(icross)
+      region.insert(vLeft1)
+      region.insert(vBot1)
+      region.insert(mnLeft)
     else:
       #Creates the Mask Alignment Mark for a Dark Field Mask
       if self.mask == 0:
-        poly.append(cross)
-        poly.extend(vLeft2)
-        poly.extend(vBot2)
-        poly.extend(mnRight)
-        poly = s.inverse(poly,border/dbu)
+        region.insert(cross)
+        region.insert(vLeft2)
+        region.insert(vBot2)
+        region.insert(mnRight)
+        region = s.inverse(region,border/dbu)
       #Creates the Mask Alignment Mark for a Light Field Mask
       else:
-        poly.append(cross)
-        poly.extend(vLeft2)
-        poly.extend(vBot2)
-        poly.extend(mnRight)
+        region.insert(cross)
+        region.insert(vLeft2)
+        region.insert(vBot2)
+        region.insert(mnRight)
         
-    for i in poly:
-      self.cell.shapes(self.layer_layer).insert(i)
+    self.cell.shapes(self.layer_layer).insert(region)
