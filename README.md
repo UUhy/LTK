@@ -12,8 +12,8 @@ Lithography Took Kit for KLayout GDSII editor. This kit contains PCells and macr
 * Vernier Scale
 
 ## Test
-```ruby
-require 'redcarpet'
-markdown = Redcarpet.new("Hello World!")
-puts markdown.to_html
+```python
+def foo():
+  if not bar:
+    return True
 ```
