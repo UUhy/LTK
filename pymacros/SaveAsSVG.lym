@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <description>Save As SVG</description>
+ <version>1</version>
+ <category>pymacros</category>
+ <prolog/>
+ <epilog/>
+ <doc/>
+ <autorun>false</autorun>
+ <autorun-early>false</autorun-early>
+ <shortcut/>
+ <show-in-menu>true</show-in-menu>
+ <group-name/>
+ <menu-path>macros_menu.my_group&gt;end("LTK").end</menu-path>
+ <interpreter>python</interpreter>
+ <dsl-interpreter-name/>
+ <text># Save As SVG macro for Klayout
+# Copyright (C) 2021  Long Chang
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+import pya
+import svg
+
+class saveAsSVG(pya.QDialog):
+  """
+  Provides a dialog box interface to save the current cell as an SVG file
+  """
+  def __init__(self, parent = None):
+   #Dialog Box constructor
+    super(saveAsSVG, self).__init__()
+    #Stores the image data
+    self.filename = None
+    #Initialize GUI elements
+    self.initGUI()
+    #Lay out GUI elements
+    self.initLayout()
+    #Connect GUI elements to functions
+    self.initConnection()
+    
+    #Update the dimension label
+    self.updateDim()
+  
+  def initGUI(self):
+    #Initialize GUI elements
+    
+    #Sets the window title
+    self.setWindowTitle("Save Active Cell to SVG")
+    #Sets the dialog box size 
+    self.resize(350, 120)
+
+    #Create label elements
+    self.labelMag = pya.QLabel('Scale: ', self)
+    self.labelSize = pya.QLabel('Size [Pixel]: ', self)
+    self.labelDimension = pya.QLabel('', self)
+    
+    #Create line edit elements
+    self.leMag = pya.QLineEdit("1", self)
+    self.leMag.setFixedWidth(50)
+    self.leMag.setToolTip('Set a scale and press &lt;enter&gt;')        
+    
+    #Create button element
+    self.bSave = pya.QPushButton(self)
+    self.bSave.setText('Save as SVG')
+    #Ensures the &lt;enter&gt; button does not active the button
+    self.bSave.setAutoDefault(False)
+    
+  def initLayout(self):
+    #Lay out GUI elements  
+    
+    #Line up elements horizontally
+    self.hlMag= pya.QHBoxLayout()
+    self.hlMag.addWidget(self.labelMag)
+    self.hlMag.addStretch()
+    self.hlMag.addWidget(self.leMag)     
+    
+    #Line up elements horizontally    
+    self.hlSize = pya.QHBoxLayout()
+    self.hlSize.addWidget(self.labelSize)
+    self.hlSize.addStretch()
+    self.hlSize.addWidget(self.labelDimension)
+    
+    #Line up elements vertically    
+    self.verticalLayout = pya.QVBoxLayout(self)
+    self.verticalLayout.addLayout(self.hlMag)
+    self.verticalLayout.addLayout(self.hlSize)
+    self.verticalLayout.addWidget(self.bSave)
+    
+    #Set the layout
+    self.setLayout(self.verticalLayout)
+  
+  def initConnection(self):
+    #Connect GUI elements to functions
+    
+    #When bSave is clicked, execute the function saveFile()
+    self.bSave.clicked(self.saveFile)
+    
+    #When leMag detects &lt;enter&gt; is pushed, execute the function updateDim()
+    self.leMag.returnPressed(self.updateDim)
+  
+  def saveFile(self):
+    '''
+    saveFile()
+      
+    Opens a file browser interface to select a file to save to, then converts the cell to svg
+    and save to the file
+    '''
+    #If the file browser is executed
+    filename = pya.FileDialog.ask_save_file_name("Save As SVG", "", "SVG (*.svg)")
+    
+    #Gets a reference to the active cell view
+    cv = pya.CellView().active()
+    
+    #Gets a reference to the active layout view
+    lv = cv.view()
+    
+    #Gets a reference to the active layout
+    layout = cv.layout()
+    
+    #Gets a reference to the active cell
+    cell = cv.cell
+    
+    #Gets the database unit
+    dbu = layout.dbu
+    
+    #Gets the binding box of the active cell
+    bbox = cell.bbox()
+    #Create a transform for KLayout coordinates to SVG coordinate
+    tc = pya.CplxTrans(1.0, 0.0, True,-bbox.left, bbox.top)
+    
+    #Gets the magnification from interface
+    mag = float(self.leMag.text)
+    
+    #Initialize an SVG object and specify its dimension
+    s = svg.svg(bbox.width()*dbu*mag, bbox.height()*dbu*mag)
+    
+    #Get all the layers in the layer view  
+    layerIterator = lv.each_layer()
+    #For each layer
+    for layer in layerIterator:
+      #If the layer is not visible, then skip
+      if not layer.visible:
+        continue
+      #Get all the shapes from this layer
+      shapeIterator = cell.begin_shapes_rec(layer.layer_index())
+      #If there are no shapes, then skip
+      if shapeIterator.at_end():
+        continue
+      #Start an svg group
+      s.startGroup(layer)
+      #Insert all the shapes
+      while not shapeIterator.at_end():
+        shape = shapeIterator.shape()
+        if shape.is_box():
+          #Insert a box shape with all the transformations and scaling
+          s.insertBox(shape.box.transformed(tc * shapeIterator.trans())*dbu*mag)
+        elif shape.is_polygon():
+          #Insert a polygon with all the transformations and scaling
+          s.insertPolygon(shape.polygon.transformed(tc * shapeIterator.trans())*dbu*mag)
+        #Go to the next shape in the iterator
+        shapeIterator.next()
+      #End an svg group
+      s.endGroup()
+    #Write the file
+    s.write(filename)
+    
+  def updateDim(self):
+    '''
+    updateDim()
+      
+    Updates the dimension label on the interface
+    '''
+    #Gets a reference to the active cell view
+    cv = pya.CellView().active()
+    #Gets the binding box size in micron units
+    bbox = cv.cell.dbbox()
+    #Gets the magnification from the interface
+    mag = float(self.leMag.text)
+    #Update the label dimension
+    self.labelDimension.setText("%d x %d" % (bbox.width()*mag, bbox.height()*mag))
+
+# Instantiate the dialog and make it visible initially.
+# Passing the main_window will make it stay on top of the main window.
+dialog = saveAsSVG(pya.Application.instance().main_window())
+dialog.show()
+</text>
+</klayout-macro>
