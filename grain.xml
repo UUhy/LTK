@@ -3,7 +3,7 @@
  <name>LTK</name>
  <token/>
  <hidden>false</hidden>
- <version>0.1</version>
+ <version>0.2</version>
  <api-version>0.25</api-version>
  <title>Lithography Tool Kit</title>
  <doc>This kit contains a number of tools that will facilitate the design of masks for photolithography and patterns for electron beam lithography.</doc>
