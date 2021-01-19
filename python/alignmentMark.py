@@ -105,7 +105,7 @@ class alignmentMark(pya.PCellDeclarationHelper):
     # Create references to the active cell
     cv = pya.CellView().active()
     layout = cv.layout()
-    dbu = layout.dbu
+    dbu = self.layout.dbu
     
     s = shape()
     
@@ -116,8 +116,8 @@ class alignmentMark(pya.PCellDeclarationHelper):
     
     #Creates an inverted cross
     icross = s.cross((cWidth+2*cGap)/dbu, (cLength + 2*cGap)/dbu)
-    icross.transform(pya.Trans(cPos))
     icross = s.inverse(icross, cBorder/dbu)
+    icross.transform(pya.Trans(cPos))
     
     #Create Vernier Left 1
     vLeft1 = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu)
