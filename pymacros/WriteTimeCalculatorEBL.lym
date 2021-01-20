@@ -183,18 +183,28 @@ class calcWriteTimeEBL(pya.QDialog):
       writeTime = dose*area/current*10
       result.append([i, area, writeTime])
 
-    #Display the results
+    #Prepare the results
     layerText = "Layer/Datatype"
     areaText = "Area [mm2]"
     timeText = "Write Time"
     
+    tArea = 0
+    tWriteTime = 0
     for i in result:
       if i[1] == 0:
         continue
       layerText += "\n" + str(i[0])
       areaText += "\n" + str("%0.3f" % i[1])
       timeText += "\n" + self.getSecondsToTime(i[2])
-      
+      tArea += i[1]
+      tWriteTime += i[2]
+    
+    #Prepare the total  
+    layerText += "\n" + "Total"
+    areaText += "\n" + str("%0.3f" % tArea)
+    timeText += "\n" + self.getSecondsToTime(tWriteTime)
+    
+    #Display the results  
     self.labelLayer.setText(layerText)
     self.labelArea.setText(areaText)
     self.labelTime.setText(timeText)

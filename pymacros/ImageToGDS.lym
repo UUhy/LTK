@@ -210,6 +210,9 @@ class imageToGDS(pya.QDialog):
     
     #Make the image layout the active cell
     cv.cell = cell
+    
+    # Make the newly added layers visible
+    pya.LayoutView.current().add_missing_layers()
 
 # Instantiate the dialog and make it visible initially.
 # Passing the main_window will make it stay on top of the main window.
