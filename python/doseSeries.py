@@ -101,3 +101,12 @@ class doseSeries(pya.PCellDeclarationHelper):
     cell.delete()
     # Make the newly added layers visible
     pya.LayoutView.current().add_missing_layers()
+
+if __name__ == '__main__':
+  #This function will automatically run if Python is running this file
+  a = pya.Library()
+  # Set the description
+  a.description = "Lithography Tool Kit"
+  # Create the PCell declarations
+  a.layout().register_pcell("Test PCell", doseSeries())
+  a.register("LTK")

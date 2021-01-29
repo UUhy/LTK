@@ -33,6 +33,11 @@ class fieldMarker(pya.PCellDeclarationHelper):
   is smaller than the write field, the EBW will begin writing the pattern from the top left corner of the write field. The corners
   of the write field should be avoided since it is prone to distortion. This PCell inserts a couple of tiny (100nm) squares to
   ensure that pattern will be written at the center of the write field.
+  
+  Note
+  ----
+  LTK library loads this class when KLayout starts. At this time, the layers are not available, so this PCell won't work.
+  The solution is to reload the LTK Library
   '''
   def __init__(self):
 
@@ -126,3 +131,12 @@ class fieldMarker(pya.PCellDeclarationHelper):
     
     # Show newly added layers
     pya.LayoutView.current().add_missing_layers()
+    
+if __name__ == '__main__':
+  #This function will automatically run if Python is running this file
+  a = pya.Library()
+  # Set the description
+  a.description = "Lithography Tool Kit"
+  # Create the PCell declarations
+  a.layout().register_pcell("Test PCell", fieldMarker())
+  a.register("LTK")

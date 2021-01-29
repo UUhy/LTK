@@ -34,7 +34,9 @@ class alignmentMark(pya.PCellDeclarationHelper):
   num : from interface
             Specify the mask number
   res : from interface
-            Specify the alignment resolution        
+            Specify the alignment resolution
+  cross : from interface
+            Specify the cross type as Solid or Dashed       
     
   Returns
   ------
@@ -61,6 +63,7 @@ class alignmentMark(pya.PCellDeclarationHelper):
     self.param("mask", self.TypeInt, "Mask Type", default = 0, choices = [["Dark Field", 0],["Light Field", 1]])
     self.param("num", self.TypeString, "Mask Number", default = "01")
     self.param("res", self.TypeDouble, "Resolution [um]", default = 0.2)
+    self.param("cross", self.TypeInt, "Cross Type", default = 0, choices = [["Solid", 0],["Dashed", 1]])
 
   def display_text_impl(self):
     return "Alignment Mark\n" + "Mask Number = " + self.num
@@ -110,57 +113,65 @@ class alignmentMark(pya.PCellDeclarationHelper):
     s = shape()
     
     #Creates a cross
-    #t = pya.Trans(cPos)
-    cross = s.cross(cWidth/dbu, cLength/dbu)
-    cross.transform(pya.Trans(cPos))
+    if (self.cross == 0): #Solid Cross
+      if (self.type == 0): #Wafer Type
+        #Creates an inverted cross
+        cross = s.cross((cWidth+2*cGap)/dbu, (cLength + 2*cGap)/dbu)
+        cross = s.inverse(cross, cBorder/dbu)
+        cross.transform(pya.Trans(cPos))
+      else:
+        cross = s.cross(cWidth/dbu, cLength/dbu)
+        cross.transform(pya.Trans(cPos))
+    else: #Dashed Cross
+      if (self.type == 0): #Wafer Type
+        cross = s.cross(cWidth/dbu, cLength/dbu,1)
+        cross = s.inverse(cross, cBorder/dbu)
+        cross.transform(pya.Trans(cPos))
+      else:
+        cross = s.cross(cWidth/dbu, cLength/dbu,2)
+        cross.transform(pya.Trans(cPos))
     
-    #Creates an inverted cross
-    icross = s.cross((cWidth+2*cGap)/dbu, (cLength + 2*cGap)/dbu)
-    icross = s.inverse(icross, cBorder/dbu)
-    icross.transform(pya.Trans(cPos))
+    if (self.type == 0): #Wafer Type
+      #Create Vernier Left 1
+      vLeft = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu)
+      vLeft.transform(pya.Trans(vPosL))
+      
+      #Create Vernier Bottom 1
+      vBot = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu)
+      vBot.transform(pya.Trans(1, False, vPosB.x, vPosB.y))
+      
+      #Create Mask Number 
+      tt = pya.CplxTrans(mLineWidth, 0, False, mPosL.x, mPosL.y)
+      mNum = s.text(self.num).transform(tt)
+    else:
+      #Create Vernier Left 2
+      vLeft = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu+self.res/dbu)
+      vLeft.transform(pya.Trans(2, False, vPosL.x-vLength/dbu-vGap/dbu, vPosL.y))
     
-    #Create Vernier Left 1
-    vLeft1 = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu)
-    vLeft1.transform(pya.Trans(vPosL))
+      #Create Vernier Bottom 2
+      vBot = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu+self.res/dbu)
+      vBot.transform(pya.Trans(3, False, vPosB.x, vPosB.y-vLength/dbu-vGap/dbu))
     
-    #Create Vernier Bottom 1
-    vBot1 = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu)
-    vBot1.transform(pya.Trans(1, False, vPosB.x, vPosB.y))
-
-    #Create Vernier Left 2
-    vLeft2 = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu+self.res/dbu)
-    vLeft2.transform(pya.Trans(2, False, vPosL.x-vLength/dbu-vGap/dbu, vPosL.y))
-    
-    #Create Vernier Bottom 2
-    vBot2 = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu+self.res/dbu)
-    vBot2.transform(pya.Trans(3, False, vPosB.x, vPosB.y-vLength/dbu-vGap/dbu))
-    
-    #Create Mask Number for Wafer and Mask
-    tl = pya.CplxTrans(mLineWidth, 0, False, mPosL.x, mPosL.y)
-    tr = pya.CplxTrans(mLineWidth, 0, False, mPosR.x, mPosR.y)
-    mnLeft = s.text(self.num).transform(tl)
-    mnRight = s.text(self.num).transform(tr)
+      #Create Mask Number
+      tt = pya.CplxTrans(mLineWidth, 0, False, mPosR.x, mPosR.y)
+      mNum = s.text(self.num).transform(tt)
     
     #Creates the Wafer Alignment Mark
     region = pya.Region()
-    if self.type == 0:
-      region.insert(icross)
-      region.insert(vLeft1)
-      region.insert(vBot1)
-      region.insert(mnLeft)
-    else:
-      #Creates the Mask Alignment Mark for a Dark Field Mask
-      if self.mask == 0:
-        region.insert(cross)
-        region.insert(vLeft2)
-        region.insert(vBot2)
-        region.insert(mnRight)
-        region = s.inverse(region,border/dbu)
-      #Creates the Mask Alignment Mark for a Light Field Mask
-      else:
-        region.insert(cross)
-        region.insert(vLeft2)
-        region.insert(vBot2)
-        region.insert(mnRight)
+    region.insert(cross)
+    region.insert(vLeft)
+    region.insert(vBot)
+    region.insert(mNum)
+    if (self.type == 1) and (self.mask == 0):
+      region = s.inverse(region,border/dbu)
         
     self.cell.shapes(self.layer_layer).insert(region)
+    
+if __name__ == '__main__':
+  #This function will automatically run if Python is running this file
+  a = pya.Library()
+  # Set the description
+  a.description = "Lithography Tool Kit"
+  # Create the PCell declarations
+  a.layout().register_pcell("Test PCell", alignmentMark())
+  a.register("LTK")

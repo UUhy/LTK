@@ -45,7 +45,7 @@ class shape(object):
   def __repr__(self):
     return ''
   
-  def cross(self, width, length):
+  def cross(self, width, length, crossType = 0):
     '''
     cross(width, length)
     
@@ -57,6 +57,11 @@ class shape(object):
           The width of each leg of the cross
     length : integer
           The length of each leg of the cross
+    crossType : integer
+          The type of cross
+          0 : A regular cross
+          1 : A dashed cross with center
+          2 : A dashed cross without center
     
     Returns
     ------
@@ -77,12 +82,70 @@ class shape(object):
     wh = int(width/2)
     lh = int(length/2)
     
-    # Create the cross
-    polygon = pya.Polygon([pya.Point(-wh,-lh), pya.Point(-wh,-wh), pya.Point(-lh,-wh), pya.Point(-lh,wh), 
-      pya.Point(-wh,wh), pya.Point(-wh,lh), pya.Point(wh,lh), pya.Point(wh,wh),
-      pya.Point(lh,wh), pya.Point(lh,-wh), pya.Point(wh,-wh), pya.Point(wh,-lh)])
+    #Create a cross
+    if (crossType == 0):
+      #Create a rectangle with length along X
+      xBox = pya.Box(-wh,-lh,wh,lh)
+      #Create a rectangle with length along y
+      yBox = pya.Box(-lh,-wh,lh,wh)
+      #Combine the two rectangles together
+      region = pya.Region(xBox)+pya.Region(yBox)
+      #Merge the region
+      region.merge()
+    #Create a dashed cross with center
+    elif (crossType == 1):
+      #Define the position of the segments
+      pos = [-4, -2, 2, 4]
+      #Calculate segment dimension
+      s = int((lh-wh)/4)
+      sh = int(s/2)
+      #Create segments
+      xBox = pya.Box(-sh, -wh, sh, wh)
+      yBox = pya.Box(-wh, -sh, wh, sh)
+      #Define a region with a center cross
+      region = pya.Region(pya.Box(-wh,-wh,wh,wh))
+      #Calculate an offset due to center
+      dw = sh-wh
+      for i in pos:
+        #Determine translations for negative positions
+        if (i < 0):
+          tx = pya.Trans(int(i*s+dw),0)
+          ty = pya.Trans(0,int(i*s+dw))
+        else:
+        #Determine translations for positive positions
+          tx = pya.Trans(int(i*s-dw),0)
+          ty = pya.Trans(0,int(i*s-dw))
+        #Insert the segments into the region
+        region.insert(tx.trans(xBox))
+        region.insert(ty.trans(yBox))
+    #Create a dashed cross without a center
+    elif (crossType == 2):
+      #Define the position of the segments
+      pos = [-3, -1, 1, 3]
+      #Calculate the segment dimension
+      s = int((lh-wh)/4)
+      sh = int(s/2)
+      #Create segments
+      xBox = pya.Box(-sh, -wh, sh, wh)
+      yBox = pya.Box(-wh, -sh, wh, sh)
+      #Calculate an offset due to center
+      dw = sh-wh
+      #Define a region with nothing
+      region = pya.Region()
+      for i in pos:
+        if (i < 0):
+          #Determine translations for negative positions
+          tx = pya.Trans(int(i*s+dw),0)
+          ty = pya.Trans(0,int(i*s+dw))
+        else:
+          #Determine the translations for positive positions
+          tx = pya.Trans(int(i*s-dw),0)
+          ty = pya.Trans(0,int(i*s-dw))
+        #Insert the segments into the region
+        region.insert(tx.trans(xBox))
+        region.insert(ty.trans(yBox))
     
-    return pya.Region(polygon)
+    return region
 
   def vernier(self, width, length, pitch):
     '''
@@ -118,19 +181,22 @@ class shape(object):
     
     # Create the large tick mark
     polygons = []
-    tick = pya.Polygon([pya.Point(0,0), pya.Point(length,0), pya.Point(length,width), pya.Point(0,width)])
+    #tick = pya.Polygon([pya.Point(0,0), pya.Point(length,0), pya.Point(length,width), pya.Point(0,width)])
+    tick = pya.Polygon([pya.Point(0,0), pya.Point(0,width), pya.Point(length,width), pya.Point(length,0)])
     tc = pya.Trans(int(-length/2),int(-width/2))
     polygons.append(tc.trans(tick))
     
     # Create the medium tick mark
-    tickm = pya.Polygon([pya.Point(0,0), pya.Point(length*scaleM,0), pya.Point(length*scaleM,width), pya.Point(0,width)])
+    #tickm = pya.Polygon([pya.Point(0,0), pya.Point(length*scaleM,0), pya.Point(length*scaleM,width), pya.Point(0,width)])
+    tickm = pya.Polygon([pya.Point(0,0), pya.Point(0,width), pya.Point(length*scaleM,width), pya.Point(length*scaleM,0)])
     pos = [-2, -1, 1, 2]
     for i in pos:
       tt = pya.Trans(0,int(i*pitch*5))
       polygons.append(tc.trans(tt.trans(tickm)))
     
     # Create the small tick mark
-    ticks = pya.Polygon([pya.Point(0,0), pya.Point(length*scaleS,0), pya.Point(length*scaleS,width), pya.Point(0,width)])
+    #ticks = pya.Polygon([pya.Point(0,0), pya.Point(length*scaleS,0), pya.Point(length*scaleS,width), pya.Point(0,width)])
+    ticks = pya.Polygon([pya.Point(0,0), pya.Point(0,width), pya.Point(length*scaleS,width), pya.Point(length*scaleS,0)])
     pos = [-9, -8, -7, -6, -4, -3, -2, -1, 1, 2, 3, 4, 6, 7, 8, 9]
     for i in pos:
       tt = pya.Trans(0,int(i*pitch))
@@ -198,6 +264,48 @@ class shape(object):
     iRegion = regionBox-region
     
     return iRegion
+  
+  def checkerboard(self, width, num = 5):
+    '''
+    checkerboard(width, num)
+    
+    Generates a checkerboard pattern
+    
+    Parameters
+    ---------
+    width : integer
+          The width of each square
+    num : integer (5)
+          The number of squares
+    
+    Returns
+    ------
+    region : pya.Region
+         A region containing the checkerboard
+    
+    Description
+    ---------
+    A checkerboard pattern is used to qualitatively evaluate the resolution of the print.
+    The corners of the checkboard pattern will degrade as resolution gets worse
+    '''    
+    # Create a box
+    square = pya.Polygon([pya.Point(0,0), pya.Point(0,width), pya.Point(width,width), pya.Point(width,0)])
+    polygons = []
+    tc = pya.Trans(-int(num*width/2),-int(num*width/2))
+    
+    if (num%2 == 1):
+      for i in range(num*num):
+        if (i%2 == 0):
+          tt = pya.Trans(int(i%num*width),int(i/num*width))
+          polygons.append(tc.trans(tt.trans(square)))
+    else:
+      for i in range(num):
+        for j in range(num):
+          if ((j+i)%2 == 0):
+            tt = pya.Trans(int(i*width),int(j*width))
+            polygons.append(tc.trans(tt.trans(square)))
+    
+    return pya.Region(polygons)
 
 def testKLayout():
   #This performs a simple test of the class and draws the result on the active layout in KLayout
@@ -234,6 +342,18 @@ def testKLayout():
   region = a.inverse(region,10/dbu)
   cell.shapes(layer).insert(region)
   
+  #Creates a dashed cross
+  tt = pya.Trans(0,-200000)
+  region = a.cross(10/dbu,50/dbu,1)
+  cell.shapes(layer).insert(region, tt)
+  region = a.cross(10/dbu,50/dbu,2)
+  cell.shapes(layer).insert(region, tt)
+  tt = pya.Trans(-100000,-200000)
+  region = a.cross(10/dbu,100/dbu,1)
+  cell.shapes(layer).insert(region, tt)
+  region = a.cross(10/dbu,100/dbu,2)
+  cell.shapes(layer).insert(region, tt)
+  
   #Creates a vernier pattern and inserts it into the test cell
   tt = pya.Trans(-100000,0)
   region = a.vernier(4/dbu, 40/dbu, 8.2/dbu)
@@ -253,6 +373,14 @@ def testKLayout():
   tt = pya.Trans(0,100000)
   region = a.text("0123456789")
   region = a.inverse(region, 10/dbu)
+  cell.shapes(layer).insert(region,tt)
+  
+  #Create checkboard patterns
+  tt = pya.Trans(-100000,150000)
+  region = a.checkerboard(10/dbu,4)
+  cell.shapes(layer).insert(region,tt)
+  tt = pya.Trans(0,150000)
+  region = a.checkerboard(10/dbu,5)
   cell.shapes(layer).insert(region,tt)
   
   cv.cell = cell

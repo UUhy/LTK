@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <klayout-macro>
- <description>Lithography Tool Kit</description>
+ <description>Reload LTK Library</description>
  <version>1</version>
  <category>pymacros</category>
  <prolog/>
@@ -9,19 +9,20 @@
  <autorun>true</autorun>
  <autorun-early>false</autorun-early>
  <shortcut/>
- <show-in-menu>false</show-in-menu>
+ <show-in-menu>true</show-in-menu>
  <group-name/>
- <menu-path/>
+ <menu-path>macros_menu.my_group&gt;end("LTK").end</menu-path>
  <interpreter>python</interpreter>
  <dsl-interpreter-name/>
  <text>import pya
 
-from vernier import vernier
+from alignmentMark import alignmentMark
 from cross import cross
+from checkerboard import checkerboard
+from vernier import vernier
 from doseSeries import doseSeries
 from fieldMarker import fieldMarker
 from shape import shape
-from alignmentMark import alignmentMark
 
 class LTK(pya.Library):
   """
@@ -35,8 +36,9 @@ class LTK(pya.Library):
     
     # Create the PCell declarations
     self.layout().register_pcell("Alignment Mark", alignmentMark())
-    self.layout().register_pcell("Shape: Vernier", vernier())
+    self.layout().register_pcell("Shape: Checkerboard", checkerboard())
     self.layout().register_pcell("Shape: Cross", cross())
+    self.layout().register_pcell("Shape: Vernier", vernier())
     self.layout().register_pcell("Jeol: Dose Series", doseSeries())
     self.layout().register_pcell("Jeol: Field Marker", fieldMarker())
     

@@ -45,6 +45,7 @@ class cross(pya.PCellDeclarationHelper):
 
     # Parameters
     self.param("layer", self.TypeLayer, "Layer", default = pya.LayerInfo(1, 0))
+    self.param("type", self.TypeInt, "Type", default = 0, choices = [["Solid", 0],["Dashed", 1],["Dashed Inverted", 2]])
     self.param("width", self.TypeDouble, "Width [um]", default = 10)
     self.param("length", self.TypeDouble, "Length [um]", default = 100)
     self.param("inverse", self.TypeBoolean, "Inverse", default = False)
@@ -75,9 +76,18 @@ class cross(pya.PCellDeclarationHelper):
     
     # Create the cross
     s = shape()
-    region = s.cross(w,l)
+    region = s.cross(w,l,self.type)
     
     if (self.inverse):
       region = s.inverse(region,b)
    
     self.cell.shapes(self.layer_layer).insert(region)
+
+if __name__ == '__main__':
+  #This function will automatically run if Python is running this file
+  a = pya.Library()
+  # Set the description
+  a.description = "Lithography Tool Kit"
+  # Create the PCell declarations
+  a.layout().register_pcell("Test PCell", cross())
+  a.register("LTK")
