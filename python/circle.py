@@ -1,4 +1,4 @@
-# Checkerboard PCell for Klayout
+# Circle PCell for Klayout
 # Copyright (C) 2021  Long Chang
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,44 +17,43 @@
 import pya
 from shape import shape
 
-class checkerboard(pya.PCellDeclarationHelper):
+class circle(pya.PCellDeclarationHelper):
   '''
-  Generates a checkerboard pattern
+  Generates a circle pattern
     
   Parameters
   ---------
   layer : from interfance
         The layer and datatype for the patterns
-  width : from interface
-        The width of each square
-  num : from interface
-        Create a num x num matrix of squares
+  diameter : from interface
+        The diameter of the circle
+  vertices : from interface
+        The number of vertices
   invert : from interface
         Invert the pattern
   border : from interface
         The space between the bounding box and the inverted pattern
-          
-  Description
-  ---------
-  A checkboard pattern can be used to verify the print resolution
   '''
   def __init__(self):
 
     # Important: initialize the super class
-    super(checkerboard, self).__init__()
+    super(circle, self).__init__()
 
     # Parameters
     self.param("layer", self.TypeLayer, "Layer", default = pya.LayerInfo(1, 0))
-    self.param("width", self.TypeDouble, "Width [um]", default = 10)
-    self.param("num", self.TypeInt, "Number", default = 5)
+    self.param("diameter", self.TypeDouble, "Diameter [um]", default = 1)
+    self.param("vertices", self.TypeInt, "Vertices", default = 8)
     self.param("invert", self.TypeBoolean, "Hole", default = False)
     self.param("border", self.TypeDouble, "   Border Width [um]", default = 10) 
 
   def display_text_impl(self):
-    return "Checkerboard\n" + "Width [um] = " + str('%.3f' % self.width) + "\n" + "Number = " + str('%.3f' % self.num)
+    return "Circle\n" + "Diameter [um] = " + str('%.3f' % self.diameter) + "\n" + "Vertices = " + str('%.3f' % self.vertices)
   
   def coerce_parameters_impl(self):   
-    pass
+    #Vertices must be at least 8 and an even number
+    if (self.vertices < 8):
+      self.vertices = 8
+    self.vertices = int(self.vertices/4)*4
   
   def can_create_from_shape_impl(self):
     pass
@@ -69,12 +68,12 @@ class checkerboard(pya.PCellDeclarationHelper):
     # Creates the patterns
 
     # Convert parameters from [um] to [dbu] or database units
-    w = self.width / self.layout.dbu
+    d = self.diameter / self.layout.dbu
     b = self.border / self.layout.dbu
     
     # Create the cross
     s = shape()
-    region = s.checkerboard(w,self.num)
+    region = s.circle(d,self.vertices)
     
     if (self.invert):
       region = s.invert(region,b)
@@ -87,5 +86,5 @@ if __name__ == '__main__':
   # Set the description
   a.description = "Lithography Tool Kit"
   # Create the PCell declarations
-  a.layout().register_pcell("Test PCell", checkerboard())
+  a.layout().register_pcell("Test PCell", circle())
   a.register("LTK")

@@ -31,7 +31,7 @@ class vernier(pya.PCellDeclarationHelper):
         The length of the central tick mark
   pitch : from interface
         The distance between neighboring tick marks
-  inverse : from interface
+  invert : from interface
         Invert the pattern?
   border : from interface
         The space between the bounding box and the inverted pattern
@@ -50,7 +50,7 @@ class vernier(pya.PCellDeclarationHelper):
     self.param("width", self.TypeDouble, "Width [um]", default = 4)
     self.param("length", self.TypeDouble, "Length [um]", default = 40)
     self.param("pitch", self.TypeDouble, "Pitch [um]", default = 8)
-    self.param("inverse", self.TypeBoolean, "Hole", default = False)
+    self.param("invert", self.TypeBoolean, "Hole", default = False)
     self.param("border", self.TypeDouble, "   Border Width [um]", default = 10)   
 
   def display_text_impl(self):
@@ -81,8 +81,8 @@ class vernier(pya.PCellDeclarationHelper):
     s = shape()
     region = s.vernier(w,l,p)
     
-    if (self.inverse):
-      region = s.inverse(region,b)
+    if (self.invert):
+      region = s.invert(region,b)
 
     self.cell.shapes(self.layer_layer).insert(region)
 

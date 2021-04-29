@@ -31,6 +31,7 @@
 # along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 
 import pya
+import numpy as np
 
 class calcWriteTimeEBL(pya.QDialog):
   """
@@ -58,19 +59,50 @@ class calcWriteTimeEBL(pya.QDialog):
     self.labelInstruction = pya.QLabel('This macro estimates the writetime for the active cell', self)
     self.labelBeamCurrent = pya.QLabel('Beam Current [nA]: ', self)
     self.labelDose = pya.QLabel('Dose [uC/cm2]: ', self)
+    self.labelRate = pya.QLabel('Rate [$/hr]: ', self)
+    self.labelBeamDiameter = pya.QLabel('Beam Diameter [nm]: ', self)
+    
     #These labels are hidden initially
+    self.labelCost = pya.QLabel(' ', self)
+    self.labelCostValue = pya.QLabel(' ', self)
+    self.labelCostValue.setToolTip('This estimate does not include the cost of labor and overhead such as:\ndesigning the layout, preparing the print data, setup and cleanup\nwhich can typically add several hours.')        
+        
+    self.labelTotalTime = pya.QLabel('', self)
+    self.labelTotalTimeValue = pya.QLabel('', self)
+    self.labelTotalTimeValue.setToolTip('This estimate does not include stage movement and beam settling time.\nEach stage move adds approximately 3 seconds\nBeam settling time is linearly proportional to the number of patterns and shot pitch:\n\tFor arrays of circles, beam settling time may significantly exceed the exposure time')        
+        
     self.labelLayer = pya.QLabel('', self)
     self.labelArea = pya.QLabel('', self)
     self.labelTime = pya.QLabel('', self)
+    self.labelDiameter = pya.QLabel('12', self)
+    self.labelDiameter.setToolTip('This is the theoretical beam diameter.\nThe actual print will be larger than the layout.\n\tThe beam diameter depends on the calibration quality/effort\n\tThe electron beam scatters in the photoresist\n\tThe electron beam can reflect off the substrate back into the photoresist.\n\tPhotoresist has limited resolution and contrast')        
 
     #Create text inputs
     self.leBeamCurrent = pya.QLineEdit("1", self)
     self.leBeamCurrent.setFixedWidth(50)
     self.leBeamCurrent.setToolTip('Higher beam current reduces cost (write time) at the expense of pattern fidelity (resolution)\n\n0.1 [nA]\ttypically used for sub-20nm resolution\n1 [nA]\tprovides reasonable speed and with sub-100nm resolution\n&gt;1 [nA]\texplore to reduce write time and achieve acceptable resolution')        
+    self.leBeamCurrent.setValidator(pya.QRegExpValidator(pya.QRegExp("[0-9\.e\-]*"), self))
         
     self.leDose = pya.QLineEdit("500", self)
     self.leDose.setFixedWidth(50)
-    self.leDose.setToolTip('The actual dose to produce high fidelity prints depend on many factors.\n\nPrint the same pattern at various dosages around the critical dose to\ndetermine the lowest dose for the desired pattern.\n\nThe critical dose [uC/cm2] for various eBeam resist is:\nPMMA:\t\t350\nHSQ:\t\t700')
+    self.leDose.setToolTip('The actual dose to produce high fidelity prints depend on many factors.\n\nPrint the same pattern at various dosages around the critical dose to\ndetermine the lowest dose for the desired pattern.\n\nThe critical dose [uC/cm2] for various eBeam resist is:\nPMMA950:\t\t350\nHSQ:\t\t700')
+    self.leDose.setValidator(pya.QRegExpValidator(pya.QRegExp("[0-9\.e\-]*"), self))
+     
+    self.leRate = pya.QLineEdit("60", self)
+    self.leRate.setFixedWidth(50)
+    self.leRate.setToolTip('Rates range from $60/hr to $650/hr')
+    self.leRate.setValidator(pya.QRegExpValidator(pya.QRegExp("[0-9\.e\-]*"), self))   
+     
+    #Create a dropdown menu
+    self.cbMode = pya.QComboBox(self) 
+    self.cbMode.insertItem(0,'50kV Mode 2 Aperture 1')
+    self.cbMode.insertItem(1,'50kV Mode 2 Aperture 2')
+    self.cbMode.insertItem(2,'50kV Mode 2 Aperture 3')
+    self.cbMode.insertItem(3,'50kV Mode 4 Aperture 1')
+    self.cbMode.insertItem(4,'50kV Mode 4 Aperture 2')
+    self.cbMode.insertItem(5,'50kV Mode 4 Aperture 3')
+    self.cbMode.setToolTip('The writing mode effects the print speed versus pattern fidelity')   
+    self.cbMode.setCurrentIndex(1)
         
     #Create a button
     self.bCalc = pya.QPushButton(self)
@@ -96,6 +128,30 @@ class calcWriteTimeEBL(pya.QDialog):
     self.hlDose.addStretch()
     self.hlDose.addWidget(self.leDose)
     
+    #Line up elements horizontally    
+    self.hlRate = pya.QHBoxLayout()
+    self.hlRate.addWidget(self.labelRate)
+    self.hlRate.addStretch()
+    self.hlRate.addWidget(self.leRate)
+    
+    #Line up elements horizontally    
+    self.hlBeamDiameter = pya.QHBoxLayout()
+    self.hlBeamDiameter.addWidget(self.labelBeamDiameter)
+    self.hlBeamDiameter.addStretch()
+    self.hlBeamDiameter.addWidget(self.labelDiameter)
+    
+    #Line up elements horizontally
+    self.hlTotalTime = pya.QHBoxLayout()
+    self.hlTotalTime.addWidget(self.labelTotalTime)
+    self.hlTotalTime.addStretch()
+    self.hlTotalTime.addWidget(self.labelTotalTimeValue)
+    
+    #Line up elements horizontally
+    self.hlCost = pya.QHBoxLayout()
+    self.hlCost.addWidget(self.labelCost)
+    self.hlCost.addStretch()
+    self.hlCost.addWidget(self.labelCostValue)
+    
     #Line up elements horizontally
     self.hlResult = pya.QHBoxLayout()
     self.hlResult.addWidget(self.labelLayer)
@@ -107,9 +163,14 @@ class calcWriteTimeEBL(pya.QDialog):
     #Line up elements vertically    
     self.verticalLayout = pya.QVBoxLayout(self)
     self.verticalLayout.addWidget(self.labelInstruction)
+    self.verticalLayout.addWidget(self.cbMode)
     self.verticalLayout.addLayout(self.hlBeamCurrent)
+    self.verticalLayout.addLayout(self.hlBeamDiameter)
     self.verticalLayout.addLayout(self.hlDose)
+    self.verticalLayout.addLayout(self.hlRate)
     self.verticalLayout.addWidget(self.bCalc)
+    self.verticalLayout.addLayout(self.hlTotalTime)
+    self.verticalLayout.addLayout(self.hlCost)
     self.verticalLayout.addLayout(self.hlResult)
     
     #Set the layout
@@ -118,12 +179,17 @@ class calcWriteTimeEBL(pya.QDialog):
   def initConnection(self):
     #Connect GUI elements to functions
     
-    #When bCalc is clicked, execute the function calc()
-    self.bCalc.clicked(self.calc)
+    #When bCalc is clicked, execute the function getWriteTime()
+    self.bCalc.clicked(self.getWriteTime)
     
-  def calc(self):
+    self.cbMode.currentIndexChanged(self.getBeamDiameter)
+    self.leDose.editingFinished(self.get_leDose)
+    self.leRate.editingFinished(self.get_leRate)
+    self.leBeamCurrent.editingFinished(self.getBeamDiameter)
+    
+  def getWriteTime(self):
     '''
-    calc()
+    getWriteTime()
       
     Calculates the write time and displays it
       
@@ -154,6 +220,8 @@ class calcWriteTimeEBL(pya.QDialog):
     # Gets a list of all the layers in the layout
     layerList = layout.layer_infos()
     
+    self.getBeamDiameter()
+    
     # Sort the layer list in ascending order
     sLayerList = []
     for i in layerList:
@@ -162,8 +230,8 @@ class calcWriteTimeEBL(pya.QDialog):
     layerList = [layerList[i] for i in sIndex]
 
     # Gets the current and dose values
-    current = float(self.leBeamCurrent.text)
-    dose = float(self.leDose.text)
+    current = self.get_leBeamCurrent()
+    dose = self.get_leDose()
 
     result = []
     #Calculate area and write time for each layer
@@ -187,6 +255,8 @@ class calcWriteTimeEBL(pya.QDialog):
     layerText = "Layer/Datatype"
     areaText = "Area [mm2]"
     timeText = "Write Time"
+    costText = 'Estimated Print Cost [$]'
+    totalTimeText = 'Estimated Print Time [hh:mm:ss]'
     
     tArea = 0
     tWriteTime = 0
@@ -194,20 +264,46 @@ class calcWriteTimeEBL(pya.QDialog):
       if i[1] == 0:
         continue
       layerText += "\n" + str(i[0])
-      areaText += "\n" + str("%0.3f" % i[1])
+      areaText += "\n" + str("%0.6f" % i[1])
       timeText += "\n" + self.getSecondsToTime(i[2])
       tArea += i[1]
       tWriteTime += i[2]
     
     #Prepare the total  
-    layerText += "\n" + "Total"
-    areaText += "\n" + str("%0.3f" % tArea)
-    timeText += "\n" + self.getSecondsToTime(tWriteTime)
+    #layerText += "\n" + "Total"
+    #areaText += "\n" + str("%0.6f" % tArea)
+    #timeText += "\n" + self.getSecondsToTime(tWriteTime)
     
-    #Display the results  
+    #Display the results
+    self.labelTotalTime.setText(totalTimeText)
+    self.labelTotalTimeValue.setText(self.getSecondsToTime(tWriteTime))
+    self.labelCost.setText(costText)
+    self.labelCostValue.setText("{:.2f}".format(tWriteTime/3600))
     self.labelLayer.setText(layerText)
     self.labelArea.setText(areaText)
     self.labelTime.setText(timeText)
+  
+  def getBeamDiameter(self):
+    '''
+    getBeamDiameter()
+      
+    Calculate the beam diameter
+      
+    Parameters
+    ---------
+      
+    Returns
+    ------
+    time : string
+           The time formatted in HH:MM:SS
+    '''
+    c = [[1.69e-6, -3.501e-6, -7.67e-4, 1.26e1, 2.104e1],[1.597e-6, -2.101e-4, 1.345e-2, 3.871, 8.882],
+          [1.631e-6, -3.134e-4, 2.439e-2, 1.782, 1.119e1],[4.683e-8, 3.462e-5, -1.287e-3, 2.028, 3.808],
+          [1.003e-6, -2.062e-4, 1.58e-2, 1.795e-1, 7.9],[1.693e-4, -3.812e-5, 4.964e-3, -2.426e-2, 2.7e1]]
+    index = self.cbMode.currentIndex
+    x = self.get_leBeamCurrent()
+    d = int(c[index][0]*np.power(x,4) - c[index][1]*np.power(x,3) + c[index][2]*np.power(x,2) + c[index][3]*x + c[index][4])
+    self.labelDiameter.setText(str(d))
   
   def getSecondsToTime(self, seconds):
     '''
@@ -230,6 +326,72 @@ class calcWriteTimeEBL(pya.QDialog):
     minutes = seconds // 60
     seconds %= 60
     return "%02i:%02i:%02i" % (hours, minutes, seconds)
+  
+  def get_leBeamCurrent(self):
+    '''
+    get_leBeamCurrent()
+      
+    Gets the beam current  and coerce to a valid value
+    
+    Returns
+    ------
+    val : float
+           The value of the text
+    
+    Description
+    ---------
+    The value is coerced from 0.01 to 100
+    '''
+    val = float(self.leBeamCurrent.text)
+    if val &lt; 0.01:
+      self.leBeamCurrent.setText('0.01')
+      val = 0.01
+    elif val &gt; 100:
+      self.leBeamCurrent.setText('100')
+      val = 100
+    return val
+  
+  def get_leDose(self):
+    '''
+    get_leDose()
+      
+    Gets the dose and coerce to a valid value
+    
+    Returns
+    ------
+    val : float
+           The value of the text
+    
+    Description
+    ---------
+    The value is coerced to greater than or equal to 1
+    '''
+    val = float(self.leDose.text)
+    if val &lt; 1:
+      self.leDose.setText('1')
+      val = 1
+    return val
+    
+  def get_leRate(self):
+    '''
+    get_leRate()
+      
+    Gets the rate and coerce to a valid value
+    
+    Returns
+    ------
+    val : float
+           The value of the text
+    
+    Description
+    ---------
+    The value is coerced to greater than or equal to 1
+    '''
+    val = float(self.leRate.text)
+    if val &lt; 1:
+      self.leRate.setText('1')
+      val = 1
+    return val
 
 # Instantiate the dialog and make it visible initially.
 # Passing the main_window will make it stay on top of the main window.

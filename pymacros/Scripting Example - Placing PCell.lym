@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <description/>
+ <version/>
+ <category>pymacros</category>
+ <prolog/>
+ <epilog/>
+ <doc/>
+ <autorun>false</autorun>
+ <autorun-early>false</autorun-early>
+ <shortcut/>
+ <show-in-menu>false</show-in-menu>
+ <group-name/>
+ <menu-path/>
+ <interpreter>python</interpreter>
+ <dsl-interpreter-name/>
+ <text># Class Index: https://www.klayout.de/doc-qt5/code/index.html
+
+import pya
+
+# Create a reference to the active cell view
+cv = pya.CellView().active()
+# Create a reference to the layout
+layout = cv.layout()
+
+# Create a new cell
+cell = layout.create_cell('Test')
+
+# Create a layer
+layer = layout.layer(1,0)
+
+# Make the added layers visible
+#lv.add_missing_layers()
+
+# Create a PCell Instance of a Basic.TEXT
+lib  = pya.Library.library_by_name('Basic')
+pText = lib.layout().pcell_declaration('TEXT')
+pTextPar = {"text": "Hello", "layer": layout.get_info(layer), "mag": 1000}
+pTextVar = layout.add_pcell_variant(lib,pText.id(),pTextPar)
+cell.insert(pya.CellInstArray(pTextVar,pya.Trans(0,0)))</text>
+</klayout-macro>

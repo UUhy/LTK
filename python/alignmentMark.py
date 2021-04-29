@@ -117,7 +117,7 @@ class alignmentMark(pya.PCellDeclarationHelper):
       if (self.type == 0): #Wafer Type
         #Creates an inverted cross
         cross = s.cross((cWidth+2*cGap)/dbu, (cLength + 2*cGap)/dbu)
-        cross = s.inverse(cross, cBorder/dbu)
+        cross = s.invert(cross, cBorder/dbu)
         cross.transform(pya.Trans(cPos))
       else:
         cross = s.cross(cWidth/dbu, cLength/dbu)
@@ -125,7 +125,7 @@ class alignmentMark(pya.PCellDeclarationHelper):
     else: #Dashed Cross
       if (self.type == 0): #Wafer Type
         cross = s.cross(cWidth/dbu, cLength/dbu,1)
-        cross = s.inverse(cross, cBorder/dbu)
+        cross = s.invert(cross, cBorder/dbu)
         cross.transform(pya.Trans(cPos))
       else:
         cross = s.cross(cWidth/dbu, cLength/dbu,2)
@@ -163,7 +163,7 @@ class alignmentMark(pya.PCellDeclarationHelper):
     region.insert(vBot)
     region.insert(mNum)
     if (self.type == 1) and (self.mask == 0):
-      region = s.inverse(region,border/dbu)
+      region = s.invert(region,border/dbu)
         
     self.cell.shapes(self.layer_layer).insert(region)
     

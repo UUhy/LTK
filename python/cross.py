@@ -29,7 +29,7 @@ class cross(pya.PCellDeclarationHelper):
         The width of each tick mark
   length : from interface
         The length of the central tick mark
-  inverse : from interface
+  invert : from interface
         Invert the pattern
   border : from interface
         The space between the bounding box and the inverted pattern
@@ -48,11 +48,11 @@ class cross(pya.PCellDeclarationHelper):
     self.param("type", self.TypeInt, "Type", default = 0, choices = [["Solid", 0],["Dashed", 1],["Dashed Inverted", 2]])
     self.param("width", self.TypeDouble, "Width [um]", default = 10)
     self.param("length", self.TypeDouble, "Length [um]", default = 100)
-    self.param("inverse", self.TypeBoolean, "Inverse", default = False)
+    self.param("invert", self.TypeBoolean, "Hole", default = False)
     self.param("border", self.TypeDouble, "   Border Width [um]", default = 10) 
 
   def display_text_impl(self):
-    return "Cross Pattern\n" + "Leg Width [um] = " + str('%.3f' % self.width) + "\n" + "Leg Length [um] = " + str('%.3f' % self.length)
+    return "Cross\n" + "Leg Width [um] = " + str('%.3f' % self.width) + "\n" + "Leg Length [um] = " + str('%.3f' % self.length)
   
   def coerce_parameters_impl(self):   
     pass
@@ -78,8 +78,8 @@ class cross(pya.PCellDeclarationHelper):
     s = shape()
     region = s.cross(w,l,self.type)
     
-    if (self.inverse):
-      region = s.inverse(region,b)
+    if (self.invert):
+      region = s.invert(region,b)
    
     self.cell.shapes(self.layer_layer).insert(region)
 

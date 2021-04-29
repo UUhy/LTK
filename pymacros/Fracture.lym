@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <description/>
+ <version/>
+ <category>pymacros</category>
+ <prolog/>
+ <epilog/>
+ <doc/>
+ <autorun>false</autorun>
+ <autorun-early>false</autorun-early>
+ <shortcut/>
+ <show-in-menu>false</show-in-menu>
+ <group-name/>
+ <menu-path/>
+ <interpreter>python</interpreter>
+ <dsl-interpreter-name/>
+ <text>import pya
+
+# Create a reference to the active cell view
+cv = pya.CellView().active()
+# Create a reference to the layout
+layout = cv.layout()
+
+# Create a new cell
+cell = cv.cell
+
+# Create a layer
+layer = layout.layer(1,0)
+
+shapes = layout.begin_shapes(cell, layer)
+poly = []
+#While the shape iterator has not ended
+while not shapes.at_end():
+  #Accumulate the area of all shapes
+  poly.extend(shapes.shape().polygon.decompose_trapezoids(pya.Polygon.TD_vtrapezoids))
+  #Go to the next shape in the iterator
+  shapes.next()
+
+for i in poly:
+  cell.shapes(layer).insert(i)</text>
+</klayout-macro>

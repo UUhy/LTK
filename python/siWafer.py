@@ -1,4 +1,4 @@
-# Checkerboard PCell for Klayout
+# Silicon Wafer PCell for Klayout
 # Copyright (C) 2021  Long Chang
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,41 +17,42 @@
 import pya
 from shape import shape
 
-class checkerboard(pya.PCellDeclarationHelper):
+class siWafer(pya.PCellDeclarationHelper):
   '''
-  Generates a checkerboard pattern
+  Generates a silicon wafer pattern
     
   Parameters
   ---------
   layer : from interfance
         The layer and datatype for the patterns
-  width : from interface
-        The width of each square
-  num : from interface
-        Create a num x num matrix of squares
+  diameter : from interface
+        The diameter of the Silicon Wafer
+  secondaryFlatAngle : from interface
+        The location of the secondar flat
   invert : from interface
         Invert the pattern
   border : from interface
         The space between the bounding box and the inverted pattern
-          
-  Description
-  ---------
-  A checkboard pattern can be used to verify the print resolution
   '''
   def __init__(self):
 
     # Important: initialize the super class
-    super(checkerboard, self).__init__()
+    super(siWafer, self).__init__()
 
     # Parameters
+    self.specDiameter = [50.8,76.2,100,125,150]
+    self.specPrimaryFlat = [15.88, 22.22, 32.5, 42.5, 57.5]
+    self.specSecondaryFlat = [8, 11.18, 18, 27.5, 37.5]
+    self.specSecondaryFlatAngle = [45,90,180]
     self.param("layer", self.TypeLayer, "Layer", default = pya.LayerInfo(1, 0))
-    self.param("width", self.TypeDouble, "Width [um]", default = 10)
-    self.param("num", self.TypeInt, "Number", default = 5)
+    self.param("diameter", self.TypeInt, "Diameter [mm]", default = 0, choices = [["50.8", 0],["76.2", 1],["100", 2],["125", 2],["150", 2]])
+    self.param("secondaryFlatAngle", self.TypeInt, "Secondary Flat Angle [degrees]", default = 1, choices = [["45", 0],["90", 1],["180", 2]])
     self.param("invert", self.TypeBoolean, "Hole", default = False)
-    self.param("border", self.TypeDouble, "   Border Width [um]", default = 10) 
+    self.param("border", self.TypeDouble, "   Border Width [mm]", default = 10) 
 
   def display_text_impl(self):
-    return "Checkerboard\n" + "Width [um] = " + str('%.3f' % self.width) + "\n" + "Number = " + str('%.3f' % self.num)
+    print self.diameter
+    return "Silicon Wafer\n" + "Diameter [mm] = " + str(self.specDiameter[self.diameter])
   
   def coerce_parameters_impl(self):   
     pass
@@ -69,12 +70,16 @@ class checkerboard(pya.PCellDeclarationHelper):
     # Creates the patterns
 
     # Convert parameters from [um] to [dbu] or database units
-    w = self.width / self.layout.dbu
-    b = self.border / self.layout.dbu
+
+    d = self.specDiameter[self.diameter] / self.layout.dbu * 1000
+    pFlat = self.specPrimaryFlat[self.diameter] / self.layout.dbu * 1000
+    sFlat = self.specSecondaryFlat[self.diameter] / self.layout.dbu * 1000
+    aFlat = self.specSecondaryFlatAngle[self.secondaryFlatAngle]
+    b = self.border / self.layout.dbu * 1000
     
     # Create the cross
     s = shape()
-    region = s.checkerboard(w,self.num)
+    region = s.siWafer(d, pFlat, sFlat, aFlat, 128)
     
     if (self.invert):
       region = s.invert(region,b)
@@ -87,5 +92,5 @@ if __name__ == '__main__':
   # Set the description
   a.description = "Lithography Tool Kit"
   # Create the PCell declarations
-  a.layout().register_pcell("Test PCell", checkerboard())
+  a.layout().register_pcell("Test PCell", siWafer())
   a.register("LTK")

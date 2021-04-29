@@ -59,13 +59,31 @@ class imageToGDS(pya.QDialog):
     self.resize(350, 120)
 
     #Create label elements
+    self.labelPixel = pya.QLabel('Pixel [nm]: ', self)
     self.labelThreshold = pya.QLabel('Threshold [%]: ', self)
     
     #Create spinbox elements
+    self.sbPixel = pya.QSpinBox(self)
+    self.sbPixel.setRange(1,1000)
+    self.sbPixel.setValue(100)
+    self.sbPixel.setFixedWidth(50)
+    self.sbPixel.setToolTip('The size of a single pixel.')
+    
     self.sbThreshold = pya.QSpinBox(self)
     self.sbThreshold.setRange(1,99)
-    self.sbThreshold.setValue(50)
+    self.sbThreshold.setValue(80)
     self.sbThreshold.setFixedWidth(50)
+    self.sbThreshold.setToolTip('Black is 0%, White is 100%. Values BELOW the threshold is converted.')
+    
+    #Create checkbox elements
+    self.cbMerge = pya.QCheckBox(self)
+    self.cbMerge.setText('Merge pixels')
+    self.cbMerge.setChecked(True)
+    
+    self.cbInvert = pya.QCheckBox(self)
+    self.cbInvert.setText('Invert Threshold')
+    self.cbInvert.setChecked(False)
+    self.cbInvert.setToolTip('Black is 0%, White is 100%, Values ABOVE the threshold is converted.')
     
     #Create button element
     self.bFileBrowser = pya.QPushButton(self)
@@ -73,7 +91,7 @@ class imageToGDS(pya.QDialog):
     
     self.bConvert = pya.QPushButton(self)
     self.bConvert.setText('Convert')
-    self.bConvert.setToolTip('Estimates the write time for the active cell')
+    
     
     #Create file dialog element
     self.fd = pya.QFileDialog(self)
@@ -87,15 +105,29 @@ class imageToGDS(pya.QDialog):
     self.hlFileBrowser.addWidget(self.bFileBrowser)        
     
     #Line up elements horizontally    
+    self.hlPixel = pya.QHBoxLayout()
+    self.hlPixel.addWidget(self.labelPixel)
+    self.hlPixel.addStretch()
+    self.hlPixel.addWidget(self.sbPixel)
+    
+    #Line up elements horizontally    
     self.hlThreshold = pya.QHBoxLayout()
     self.hlThreshold.addWidget(self.labelThreshold)
     self.hlThreshold.addStretch()
     self.hlThreshold.addWidget(self.sbThreshold)
     
+    #Line up elements horizontally
+    self.hlMerge = pya.QHBoxLayout()
+    self.hlMerge.addWidget(self.cbMerge) 
+    self.hlMerge.addStretch()
+    self.hlMerge.addWidget(self.cbInvert)      
+    
     #Line up elements vertically    
     self.verticalLayout = pya.QVBoxLayout(self)
     self.verticalLayout.addLayout(self.hlFileBrowser)
+    self.verticalLayout.addLayout(self.hlPixel)
     self.verticalLayout.addLayout(self.hlThreshold)
+    self.verticalLayout.addLayout(self.hlMerge)
     self.verticalLayout.addWidget(self.bConvert)
     
     #Set the layout
@@ -186,11 +218,14 @@ class imageToGDS(pya.QDialog):
       self.image = 0.299*r + 0.587*g + 0.114*b
     
     #Create a pixel polygon
-    w = int(1/layout.dbu)
+    w = int(self.sbPixel.value/layout.dbu/1000)
     poly = pya.Box(0,0,w,w)
     
     #Locate all pixels that pass the threshold
-    pos = np.argwhere(self.image &lt; float(self.sbThreshold.value)/100)*w
+    if self.cbInvert.isChecked():
+      pos = np.argwhere(self.image &gt; float(self.sbThreshold.value)/100)*w
+    else:
+      pos = np.argwhere(self.image &lt;= float(self.sbThreshold.value)/100)*w
     #Insert pixel polygons into the cell
     for i in pos:
       t = pya.Trans(i[1],-i[0])
@@ -198,12 +233,18 @@ class imageToGDS(pya.QDialog):
     
     #Select all polygons in the cell
     region = pya.Region.new(cell.begin_shapes_rec(layer))
+    
+    #Move the image so that the center of the bottom left pixel is at (0,0)
+    t = pya.Trans(-region.bbox().left+w/2,-region.bbox().bottom+w/2)
+    region.transform(t)
+    
     #Merge selected polygons
-    region.merge()
-    #Clear the cell
-    cell.clear()
-    #Insert the merged polygons into the cell
-    cell.shapes(layer).insert(region)
+    if self.cbMerge.isChecked():
+      region.merge()
+      #Clear the cell
+      cell.clear()
+      #Insert the merged polygons into the cell
+      cell.shapes(layer).insert(region)
           
     #Close the dialog box
     self.close()

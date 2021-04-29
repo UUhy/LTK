@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <description>Digitize Graph</description>
+ <version/>
+ <category>pymacros</category>
+ <prolog/>
+ <epilog/>
+ <doc/>
+ <autorun>false</autorun>
+ <autorun-early>false</autorun-early>
+ <shortcut/>
+ <show-in-menu>true</show-in-menu>
+ <group-name/>
+ <menu-path>macros_menu.my_group&gt;end("LTK").end</menu-path>
+ <interpreter>python</interpreter>
+ <dsl-interpreter-name/>
+ <text># Write Time Calcuator macro for Klayout
+# Copyright (C) 2021  Long Chang
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+import pya
+import math
+import numpy as np
+import csv
+
+class digitizeGraph(pya.QDialog):
+  """
+  Provides a dialog box interface to calculate the write time of the active cell
+  """
+  def __init__(self, parent = None):
+    #Dialog Box constructor
+    super(digitizeGraph, self).__init__()
+    #Initialize GUI elements
+    self.initGUI()
+    #Lay out GUI elements
+    self.initLayout()
+    #Connect GUI elements to functions
+    self.initConnection()
+    #Initialize Layer Interface
+    self.layerList = self.makeLayerInterface(pya.CellView().active().layout(), pya.LayoutView().current())
+    #Initialize global variables
+    self.data = []
+  
+  def initGUI(self):
+    #Initialize GUI elements
+    
+    #Sets the window title
+    self.setWindowTitle("Digitize Graph")
+    #Sets the dialog box size 
+    self.resize(350, 120)
+
+    #Create labels
+    self.labelInstruction = pya.QLabel('&lt;a href=\"https://docs.google.com/document/d/1yQqW2hW_rrvVL-ZXgHhjy6jwUV_V8P2n9T1n3d4-gkE/edit#heading=h.cazate4pz3i5\"&gt; This macro&lt;/a&gt; digitizes a graph into a CSV data for plotting', self)
+    self.labelInstruction.setTextFormat(pya.Qt.RichText)
+    self.labelInstruction.setTextInteractionFlags(pya.Qt.TextBrowserInteraction)
+    self.labelInstruction.setOpenExternalLinks(True)
+    
+    self.labelBlank = pya.QLabel(' ', self)
+    self.labelX = pya.QLabel('X: ', self)
+    self.labelY = pya.QLabel('Y: ', self)
+    self.labelStart = pya.QLabel('Start ', self)
+    self.labelEnd = pya.QLabel('End ', self)
+    self.labelLog = pya.QLabel('Log Scale',self)
+
+    #Create text inputs
+    self.leXStart = pya.QLineEdit("1e-11", self)
+    self.leXStart.setFixedWidth(75)
+    self.leXStart.setAlignment(pya.Qt_AlignmentFlag.AlignRight)
+    self.leXStart.setValidator(pya.QRegExpValidator(pya.QRegExp("[0-9\.e\-]*"), self))
+    self.leXEnd = pya.QLineEdit("1e-7", self)
+    self.leXEnd.setFixedWidth(75)
+    self.leXEnd.setAlignment(pya.Qt_AlignmentFlag.AlignRight)
+    self.leXEnd.setValidator(pya.QRegExpValidator(pya.QRegExp("[0-9\.e\-]*"), self))
+    self.leYStart = pya.QLineEdit(".001", self)
+    self.leYStart.setFixedWidth(75)
+    self.leYStart.setAlignment(pya.Qt_AlignmentFlag.AlignRight)
+    self.leYStart.setValidator(pya.QRegExpValidator(pya.QRegExp("[0-9\.e\-]*"), self))
+    self.leYEnd = pya.QLineEdit("10", self)
+    self.leYEnd.setFixedWidth(75)
+    self.leYEnd.setAlignment(pya.Qt_AlignmentFlag.AlignRight)
+    self.leYEnd.setValidator(pya.QRegExpValidator(pya.QRegExp("[0-9\.e\-]*"), self))
+        
+    #Create checkbox
+    self.cbXLog = pya.QCheckBox(self)
+    self.cbXLog.setChecked(True)
+    self.cbXLog.setToolTip('Check if the X Axis is a Log Scale')
+    self.cbYLog = pya.QCheckBox(self)
+    self.cbYLog.setChecked(True)
+    self.cbYLog.setToolTip('Check if the Y Axis is a Log Scale')
+        
+    #Create a button
+    self.bRun = pya.QPushButton(self)
+    self.bRun.setText('Digitize the GDS Graph')
+    self.bRun.setToolTip('Extracts the graph data for export to CSV')
+    self.bSave = pya.QPushButton(self)
+    self.bSave.setText('Save to CSV')
+    
+    #Create file dialog element
+    self.fd = pya.QFileDialog(self)
+    self.fd.setAcceptMode(pya.QFileDialog.AcceptSave)
+    self.fd.setFileMode(pya.QFileDialog.AnyFile)
+    self.fd.setViewMode(self.fd.List)
+    self.fd.selectFile("graph.csv")
+    
+  def initLayout(self):  
+    #Lay out GUI elements  
+    
+    #Line up elements horizontally
+    self.hlInstruction = pya.QHBoxLayout()
+    self.hlInstruction.addWidget(self.labelInstruction)        
+    
+    #Line up elements vertically    
+    self.glParameters = pya.QGridLayout()
+    self.glParameters.addWidget(self.labelX,1,0)
+    self.glParameters.addWidget(self.labelY,2,0)
+    self.glParameters.addWidget(self.labelStart,0,1,pya.Qt_AlignmentFlag.AlignHCenter)
+    self.glParameters.addWidget(self.leXStart,1,1,pya.Qt_AlignmentFlag.AlignHCenter)
+    self.glParameters.addWidget(self.leYStart,2,1,pya.Qt_AlignmentFlag.AlignHCenter)
+    self.glParameters.addWidget(self.labelEnd,0,2,pya.Qt_AlignmentFlag.AlignHCenter)
+    self.glParameters.addWidget(self.leXEnd,1,2,pya.Qt_AlignmentFlag.AlignHCenter)
+    self.glParameters.addWidget(self.leYEnd,2,2,pya.Qt_AlignmentFlag.AlignHCenter)
+    self.glParameters.addWidget(self.labelLog,0,3,pya.Qt_AlignmentFlag.AlignHCenter)
+    self.glParameters.addWidget(self.cbXLog,1,3,pya.Qt_AlignmentFlag.AlignHCenter)
+    self.glParameters.addWidget(self.cbYLog,2,3,pya.Qt_AlignmentFlag.AlignHCenter)
+    
+    #Line up elements vertically    
+    self.verticalLayout = pya.QVBoxLayout(self)
+    self.verticalLayout.addWidget(self.labelInstruction)
+    self.verticalLayout.addLayout(self.glParameters)
+    self.verticalLayout.addWidget(self.bRun)
+    self.verticalLayout.addWidget(self.bSave)
+    
+    #Set the layout
+    self.setLayout(self.verticalLayout)
+  
+  def initConnection(self):
+    #Connect GUI elements to functions
+    
+    #When bCalc is clicked, execute the function calc()
+    self.bRun.clicked(self.convert)
+    self.bSave.clicked(self.save)
+    
+  def convert(self):
+    '''
+    convert()
+      
+    Convert the GDS Layout into a CSV file
+      
+    Parameters
+    ---------
+    The parameters are acquired from the dialog box interface
+      
+    Returns
+    ------
+    The results are shown in the dialog box interface
+    
+    Description
+    ---------
+    This function calculates the minimal write time for EBL
+    The actual write time is longer due to time spent on beam
+    blanking and stage moves
+    '''
+    
+    #Gets a reference to the cell view
+    cv = pya.CellView().active()
+    
+    #Gets a reference to the layout view
+    lv = pya.LayoutView().current()
+    
+    #Gets a reference to the active layout
+    layout = cv.layout()
+
+    #Gets the active cell
+    cell = cv.cell
+
+    layerList = self.layerList
+    header = []
+    data = np.array([])
+    if not cell.begin_shapes_rec(layerList['data1']).at_end(): #if the layer is not empty
+      tmp = self.getData(cell, layerList['xyOrigin'], layerList['xEnd'], layerList['yEnd'], layerList['data1'], layerList['fit1'],True)
+      data = np.array([tmp[0],tmp[1]])
+      header.extend(['Data1 X', 'Data1 Y'])
+    if not cell.begin_shapes_rec(layerList['data2']).at_end(): #if the layer is not empty
+      if (data.shape[0] == 0):
+        tmp = self.getData(cell, layerList['xyOrigin'], layerList['xEnd'], layerList['yEnd'], layerList['data2'], layerList['fit2'],True)
+        data = np.array([tmp[0],tmp[1]])
+      else:
+        tmp = self.getData(cell, layerList['xyOrigin'], layerList['xEnd'], layerList['yEnd'], layerList['data2'], layerList['fit2'],True)
+        tData = np.array([tmp[0],tmp[1]])
+        dLen = data.shape[1] - tData.shape[1]
+        if dLen == 0:
+          data = np.concatenate((data,tData), axis=0)
+        elif dLen &gt; 0:
+          data = np.concatenate((data,np.concatenate((tData,np.zeros([2,dLen])),axis=1)),axis=0)
+        else:
+          data = np.concatenate((np.concatenate((data,np.zeros([data.shape[0],-dLen])),axis=1),tData),axis=0)
+      header.extend(['Data2 X', 'Data2 Y'])
+    if not cell.begin_shapes_rec(layerList['data3']).at_end(): #if the layer is not empty
+      if (data.shape[0] == 0):
+        tmp = self.getData(cell, layerList['xyOrigin'], layerList['xEnd'], layerList['yEnd'], layerList['data3'], layerList['fit3'],True)
+        data = np.array([tmp[0],tmp[1]])
+      else:
+        tmp = self.getData(cell, layerList['xyOrigin'], layerList['xEnd'], layerList['yEnd'], layerList['data3'], layerList['fit3'],True)
+        tData = np.array([tmp[0],tmp[1]])
+        dLen = data.shape[1] - tData.shape[1]
+        if dLen == 0:
+          data = np.concatenate((data,tData), axis=0)
+        elif dLen &gt; 0:
+          data = np.concatenate((data,np.concatenate((tData,np.zeros([2,dLen])),axis=1)),axis=0)
+        else:
+          data = np.concatenate((np.concatenate((data,np.zeros([data.shape[0],-dLen])),axis=1),tData),axis=0)
+      header.extend(['Data3 X', 'Data3 Y'])
+    data = data.transpose().tolist()
+    data.insert(0,header)
+    self.data = data
+
+  def getLayerProperty(self, layoutView, layerID):
+    '''
+    getLayerProperty()
+      
+    Gets the layer property reference for the specified layer ID
+      
+    Parameters
+    ---------
+    layoutView: pya.LayoutView().current()
+              The current layoutview
+    layerID: pya.LayerInfo.layer
+              The layer ID
+      
+    Returns
+    ------
+    layerProperties : pya.LayerProperties
+              A reference to the layer properties
+    
+    Description
+    ---------
+    Finds the layer properties associated with the specified layer ID
+    The layer properties reference allows changing:
+      fill_color
+      frame_color
+      dither_pattern
+      see https://www.klayout.de/doc-qt5/code/class_LayerProperties.html
+    '''
+    lp = layoutView.begin_layers()
+    while not lp.at_end():
+      if lp.current().layer_index() == layerID:
+        return lp.current()
+      lp.next()
+    return False
+  
+  def makeLayerInterface(self, layout, layoutView):
+    '''
+    makeLayerInterface(layout, layoutView)
+      
+    Create the layers for interacting with the macro
+      
+    Parameters
+    ---------
+    layout : pya.CellView.active().layout()
+              The active layout
+    layoutView: pya.LayoutView().current()
+              The current layoutview
+      
+    Returns
+    ------
+    layerList : Dictionary
+              A dictionary of layer name to layerID
+    
+    Description
+    ---------
+    This function creates layers that will be used by the user to specify points of interest on the layout.
+    Particular points of interest are:
+        The origin of the the graph (starting point for x and y axis)
+        The end point of the x axis
+        The end point of the y axis
+        The shapes that represent data on the graph
+    It returns a dictionary with layer name as the key and layer ID as the value
+    '''
+    
+    #Create new layers to interface with the graph digitizer
+    colorMap = {'red':0xFF0000, 'blue':0x0000FF, 'green':0x00FF00, 'magenta':0xFF00FF,'yellow':0xFFFF00, 'cyan':0x00FFFF, 'black':0x000000, 'white':0xFFFFFF}
+    layerInfo_xyOrigin = pya.LayerInfo(99,0, 'XY Origin') #This layer marks the origin
+    layerInfo_xEnd = pya.LayerInfo(99,1,"X End") #This layer marks the end point of the x axis
+    layerInfo_yEnd = pya.LayerInfo(99,2,"Y End") #This layer marks the end point of the y axis
+    layerInfo_data1 = pya.LayerInfo(99,3,"Data 1") #This layer marks Data 1
+    layerInfo_data2 = pya.LayerInfo(99,4,"Data 2") #This layer marks Data 2
+    layerInfo_data3 = pya.LayerInfo(99,5,"Data 3") #This layer marks Data 3
+    layerInfo_fit1 = pya.LayerInfo(99,6,"Fit 1") #This layer marks Fit 1
+    layerInfo_fit2 = pya.LayerInfo(99,7,"Fit 2") #This layer marks Fit 2
+    layerInfo_fit3 = pya.LayerInfo(99,8,"Fit 3") #This layer marks Fit 3
+    
+    layerID = layout.layer(layerInfo_xyOrigin)
+    layoutView.add_missing_layers()
+    prop = self.getLayerProperty(layoutView, layerID)
+    prop.fill_color = colorMap['red']
+    prop.frame_color = colorMap['red']
+    prop.dither_pattern = 0
+    prop.name = layerInfo_xyOrigin.name
+
+    layerID = layout.layer(layerInfo_xEnd)
+    layoutView.add_missing_layers()
+    prop = self.getLayerProperty(layoutView, layerID)
+    prop.fill_color = colorMap['blue']
+    prop.frame_color = colorMap['blue']
+    prop.dither_pattern = 0
+    prop.name = layerInfo_xEnd.name
+      
+    layerID = layout.layer(layerInfo_yEnd)
+    layoutView.add_missing_layers()
+    prop = self.getLayerProperty(layoutView, layerID)
+    prop.fill_color = colorMap['green']
+    prop.frame_color = colorMap['green']
+    prop.dither_pattern = 0
+    prop.name = layerInfo_yEnd.name
+    
+    layerID = layout.layer(layerInfo_data1)
+    layoutView.add_missing_layers()
+    prop = self.getLayerProperty(layoutView, layerID)
+    prop.fill_color = colorMap['magenta']
+    prop.frame_color = colorMap['magenta']
+    prop.dither_pattern = 4
+    prop.name = layerInfo_data1.name
+    
+    layerID = layout.layer(layerInfo_data2)
+    layoutView.add_missing_layers()
+    prop = self.getLayerProperty(layoutView, layerID)
+    prop.fill_color = colorMap['yellow']
+    prop.frame_color = colorMap['yellow']
+    prop.dither_pattern = 4
+    prop.name = layerInfo_data2.name
+
+    layerID = layout.layer(layerInfo_data3)
+    layoutView.add_missing_layers()
+    prop = self.getLayerProperty(layoutView, layerID)
+    prop.fill_color = colorMap['cyan']
+    prop.frame_color = colorMap['cyan']
+    prop.dither_pattern = 4
+    prop.name = layerInfo_data3.name
+    
+    layerID = layout.layer(layerInfo_fit1)
+    layoutView.add_missing_layers()
+    prop = self.getLayerProperty(layoutView, layerID)
+    prop.fill_color = colorMap['magenta']
+    prop.frame_color = colorMap['magenta']
+    prop.dither_pattern = 0
+    prop.name = layerInfo_fit1.name
+    
+    layerID = layout.layer(layerInfo_fit2)
+    layoutView.add_missing_layers()
+    prop = self.getLayerProperty(layoutView, layerID)
+    prop.fill_color = colorMap['yellow']
+    prop.frame_color = colorMap['yellow']
+    prop.dither_pattern = 0
+    prop.name = layerInfo_fit2.name
+    
+    layerID = layout.layer(layerInfo_fit3)
+    layoutView.add_missing_layers()
+    prop = self.getLayerProperty(layoutView, layerID)
+    prop.fill_color = colorMap['cyan']
+    prop.frame_color = colorMap['cyan']
+    prop.dither_pattern = 0
+    prop.name = layerInfo_fit3.name
+    
+    layerList = {'xyOrigin':layout.layer(layerInfo_xyOrigin),'xEnd':layout.layer(layerInfo_xEnd),'yEnd':layout.layer(layerInfo_yEnd),'data1':layout.layer(layerInfo_data1),'data2':layout.layer(layerInfo_data2),'data3':layout.layer(layerInfo_data3),'fit1':layout.layer(layerInfo_fit1),'fit2':layout.layer(layerInfo_fit2),'fit3':layout.layer(layerInfo_fit3)}  
+    
+    return layerList
+  
+  def getData(self, cell, originLayer, xEndLayer, yEndLayer, dataLayer, verifyLayer, verify = False):
+    '''
+    getData(cell, originLayer, xEndLayer, yEndLayer, dataLayer, verifyLayer, verify = False)
+      
+    Create the layers for interacting with the macro
+      
+    Parameters
+    ---------
+    cell : pya.CellView.active().cell()
+              The active cell
+    originLayer: pya.LayoutInfo.layer
+              The layer for the graph x and y origin
+    xEndLayer: pya.LayoutInfo.layer
+              The layer for the graph x axis end point
+    yEndLayer: pya.LayoutInfo.layer
+              The layer for the graph y axis end point
+    dataLayer: pya.LayoutInfo.layer
+              The layer for the data
+    verifyLayer: pya.LayoutInfo.layer
+              The layer to draw the processed data for verification
+    verify : Boolean (False)
+              Draw the processed data for verification
+      
+    Returns
+    ------
+    [xData, yData, xPixelPosition, yPixelPosition]
+    xData : np.array (int64)
+              The extracted x data
+    yData : np.array (int64)
+              The extracted y data
+    xPixelPosition : np.array (int64)
+              The x position of the data pixel in database units
+    yPixelPosition : np.array (int64)
+              The y position of the data pixel in database units
+    
+    Description
+    ---------
+    This function creates layers that will be used by the user to specify points of interest on the layout.
+    Particular points of interest are:
+        The origin of the the graph (starting point for x and y axis)
+        The end point of the x axis
+        The end point of the y axis
+        The shapes that represent data on the graph
+    '''
+    
+    #Determine the center of xyOrigin, xEnd and yEnd 
+    pixel = cell.begin_shapes_rec(originLayer).shape().bbox()
+    pixel_width = pixel.right - pixel.left
+    pixel_origin = pya.Region(cell.begin_shapes_rec(originLayer)).bbox().center()
+    pixel_xStart = int(pixel_origin.x/pixel_width)
+    pixel_xEnd = int(pya.Region(cell.begin_shapes_rec(xEndLayer)).bbox().center().x/pixel_width)
+    pixel_yStart = int(pixel_origin.y/pixel_width)
+    pixel_yEnd = int(pya.Region(cell.begin_shapes_rec(yEndLayer)).bbox().center().y/pixel_width)
+    
+    #Determine the axis values at each pixel
+    nx = pixel_xEnd-pixel_xStart+1
+    ny = pixel_yEnd-pixel_yStart+1
+    
+    #Determine the axis pixel values for  line1
+    px = []
+    py = []
+    shapeIterator = cell.begin_shapes_rec(dataLayer)
+    while not shapeIterator.at_end():
+      point = shapeIterator.shape().bbox().center()
+      px.append(int(point.x))
+      py.append(int(point.y))
+      shapeIterator.next()
+    
+    #Determine the average of the y axis pixel values for line 1
+    px = np.array(px)
+    py = np.array(py)
+    ix = sorted(range(len(px)), key = lambda k: px[k])
+    px = px[ix]
+    py = py[ix]
+    upx = np.unique(px)
+    upy = np.zeros(len(upx), dtype=int)
+    for i in range(len(upx)):
+      upy[i] = np.average(py[np.where(px == upx[i])[0]])
+    
+    if verify:
+      #Display the average x and y pixel values for line1
+      hw = int(pixel_width/2)
+      pixel = pya.Box(-hw,-hw,hw,hw)
+      #Insert pixel polygons into the cell
+      for i in range(len(upx)):
+        t = pya.Trans(upx[i],upy[i])
+        cell.shapes(verifyLayer).insert(t.trans(pixel))
+    
+    #Determine the actual x and y data values
+    xStart = float(self.leXStart.text)
+    xEnd = float(self.leXEnd.text)
+    yStart = float(self.leYStart.text)
+    yEnd = float(self.leYEnd.text)
+
+    if self.cbXLog.isChecked():
+      x = np.power(10,np.linspace(math.log10(xStart),math.log10(xEnd),nx))
+    else:
+      x = np.linspace(xStart,xEnd,nx)
+    if self.cbYLog.isChecked():
+      y = np.power(10,np.linspace(math.log10(yStart),math.log10(yEnd),ny))
+    else:
+      y = np.linspace(yStart,yEnd,ny)
+    
+    ipx = upx/pixel_width-pixel_xStart
+    ipy = upy/pixel_width-pixel_yStart
+    
+    #Check if the data is outside of the axis boundary
+    if np.min(ipx) &lt; 0:
+      raise Exception("At least one data point is located before the x origin pixel position")
+    elif np.max(ipx) &gt; len(x):
+      raise Exception('At least one data point located beyond the x end pixel position')
+    if np.min(ipy) &lt; 0:
+      raise Exception("At least one data point is located before the y origin pixel position")
+    elif np.max(ipy) &gt; len(y):
+      raise Exception('At least one data point located beyond the y end pixel position')
+    
+    return [x[ipx], y[ipy], upx, upy]
+  
+  def save(self):
+    '''
+    save()
+      
+    Save the data to a CSV file
+      
+    Parameters
+    ---------
+    data : [[],[]] List of List
+              The data to save
+      
+    Returns
+    ------
+    
+    Description
+    ---------
+    Save
+    '''
+    
+    if self.fd.exec_():
+        #Get the path of the selected file
+        filename = self.fd.selectedFiles()
+        with open(filename[0], mode='w') as fid:
+          fileWriter = csv.writer(fid, delimiter=',', quotechar='"', quoting = csv.QUOTE_MINIMAL)
+          fileWriter.writerows(self.data)
+       
+# Instantiate the dialog and make it visible initially.
+# Passing the main_window will make it stay on top of the main window.
+dialog = digitizeGraph(pya.Application.instance().main_window())
+dialog.show()
+</text>
+</klayout-macro>

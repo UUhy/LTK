@@ -17,12 +17,16 @@
  <text>import pya
 
 from alignmentMark import alignmentMark
-from cross import cross
+from cassette import cassette
 from checkerboard import checkerboard
-from vernier import vernier
+from circle import circle
+from cross import cross
 from doseSeries import doseSeries
 from fieldMarker import fieldMarker
+from ring import ring
 from shape import shape
+from siWafer import siWafer
+from vernier import vernier
 
 class LTK(pya.Library):
   """
@@ -37,8 +41,12 @@ class LTK(pya.Library):
     # Create the PCell declarations
     self.layout().register_pcell("Alignment Mark", alignmentMark())
     self.layout().register_pcell("Shape: Checkerboard", checkerboard())
+    self.layout().register_pcell("Shape: Circle", circle())
     self.layout().register_pcell("Shape: Cross", cross())
+    self.layout().register_pcell("Shape: Ring", ring())
+    self.layout().register_pcell("Shape: Wafer", siWafer())
     self.layout().register_pcell("Shape: Vernier", vernier())
+    self.layout().register_pcell("Jeol: JBX-5500FS Cassette", cassette())
     self.layout().register_pcell("Jeol: Dose Series", doseSeries())
     self.layout().register_pcell("Jeol: Field Marker", fieldMarker())
     
