@@ -270,9 +270,9 @@ class calcWriteTimeEBL(pya.QDialog):
       tWriteTime += i[2]
     
     #Prepare the total  
-    #layerText += "\n" + "Total"
-    #areaText += "\n" + str("%0.6f" % tArea)
-    #timeText += "\n" + self.getSecondsToTime(tWriteTime)
+    layerText += "\n" + "Total"
+    areaText += "\n" + str("%0.6f" % tArea)
+    timeText += "\n" + self.getSecondsToTime(tWriteTime)
     
     #Display the results
     self.labelTotalTime.setText(totalTimeText)
