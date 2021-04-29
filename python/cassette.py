@@ -51,7 +51,7 @@ class cassette(pya.PCellDeclarationHelper):
     self.param("border", self.TypeDouble, "   Border Width [um]", default = 10) 
 
   def display_text_impl(self):
-    return "Cassette\n" + "Type = " + self.specCassetteName(self.cassette)
+    return "Cassette\n" + "Type = " + self.specCassetteName[self.cassette]
   
   def coerce_parameters_impl(self):   
     pass
