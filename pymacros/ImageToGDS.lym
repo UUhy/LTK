@@ -91,7 +91,7 @@ class imageToGDS(pya.QDialog):
     
     self.bConvert = pya.QPushButton(self)
     self.bConvert.setText('Convert')
-    
+    self.bConvert.setEnabled(False)
     
     #Create file dialog element
     self.fd = pya.QFileDialog(self)
@@ -170,6 +170,7 @@ class imageToGDS(pya.QDialog):
         try:
           #Load the image
           self.image = mpimg.imread(filename[0])
+          self.bConvert.setEnabled(True)
         except:
           #Raise an error if the image format isn't supported
           raise Exception("The selected file (" +  filename[0].split('/')[-1] + ")is not a supported image format")
@@ -196,11 +197,6 @@ class imageToGDS(pya.QDialog):
     image into a binary image. Finally each pixel in the binary image is converted into a 1 um square
     in a GDS layout.
     '''
-    if self.image == None:
-      raise Exception("Please select an image file first")
-    
-    self.bConvert.setText('Converting... Please Wait')
-    self.repaint()
     
     #Gets a reference to the cell view
     cv = pya.CellView().active()
@@ -226,10 +222,23 @@ class imageToGDS(pya.QDialog):
       pos = np.argwhere(self.image &gt; float(self.sbThreshold.value)/100)*w
     else:
       pos = np.argwhere(self.image &lt;= float(self.sbThreshold.value)/100)*w
+     
+    #Track the conversion progress
+    counter = 0.0
+    progress = 0.01
+    nPos = len(pos)
+     
     #Insert pixel polygons into the cell
     for i in pos:
       t = pya.Trans(i[1],-i[0])
-      cell.shapes(layer).insert(t.trans(poly))   
+      cell.shapes(layer).insert(t.trans(poly))
+      
+      #Update the convert button text to display progress
+      counter += 1
+      if (counter/nPos &gt; progress):
+        self.bConvert.setText('Converting... '  + str(int(progress*100)) + "%")
+        self.repaint()
+        progress = counter/nPos + 0.01
     
     #Select all polygons in the cell
     region = pya.Region.new(cell.begin_shapes_rec(layer))

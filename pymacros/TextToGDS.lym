@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <description>Text to GDS</description>
+ <version/>
+ <category>pymacros</category>
+ <prolog/>
+ <epilog/>
+ <doc/>
+ <autorun>false</autorun>
+ <autorun-early>false</autorun-early>
+ <shortcut/>
+ <show-in-menu>true</show-in-menu>
+ <group-name/>
+ <menu-path>macros_menu.my_group&gt;end("LTK").end</menu-path>
+ <interpreter>python</interpreter>
+ <dsl-interpreter-name/>
+ <text># Text to GDS Converter macro for Klayout
+# Copyright (C) 2021  Long Chang
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+import pya
+import numpy as np
+import csv
+import math
+from shape import shape
+
+class textToGDS(pya.QDialog):
+  """
+  Provides a dialog box interface to convert an image to a GDS layout
+  """
+  def __init__(self, parent = None):
+   #Dialog Box constructor
+    super(textToGDS, self).__init__()
+    #Stores the image data
+    self.image = None
+    #Store the text data
+    self.text = None
+    #Width of a character in [nm]
+    self.charWidth = 6000
+    #Height of a charachter in [nm]
+    self.charHeight = 8000
+    #Number of Lines per Plate
+    self.maxLine = None
+    #Number of Lines per Plate
+    self.maxChar = None
+    #Initialize GUI elements
+    self.initGUI()
+    #Lay out GUI elements
+    self.initLayout()
+    #Connect GUI elements to functions
+    self.initConnection()
+  
+  def initGUI(self):
+    #Initialize GUI elements
+    
+    #Sets the window title
+    self.setWindowTitle("Text to GDS Converter")
+    #Sets the dialog box size 
+    self.resize(350, 120)
+
+    #Create label elements
+    self.labelPadding = pya.QLabel('Name Plate Padding [um]: ', self)
+    self.labelFillCell = pya.QLabel('Fill Cell: ', self)
+    
+    self.labelPlateWidth = pya.QLabel('     Nameplate Width [um]:', self)
+    self.labelPlateWidthValue = pya.QLabel('', self)
+    self.labelPlateHeight = pya.QLabel('     Nameplate Height [um]:', self)
+    self.labelPlateHeightValue = pya.QLabel('', self)
+    
+    self.sbPadding = pya.QSpinBox(self)
+    self.sbPadding.setRange(1,1000)
+    self.sbPadding.setValue(10)
+    self.sbPadding.setFixedWidth(100)
+    self.sbPadding.setToolTip('The amount of space between name plates.')
+    
+    #Create checkbox elements
+    self.cbFillCell = pya.QCheckBox(self)
+    self.cbFillCell.setText('')
+    self.cbFillCell.setToolTip('Place name plates at the center of each shape in the cell')
+    self.cbFillCell.setChecked(True)
+    
+    #Create button element
+    self.bFileBrowser = pya.QPushButton(self)
+    self.bFileBrowser.setText('Select a TSV File')
+    
+    self.bConvert = pya.QPushButton(self)
+    self.bConvert.setText('Convert')
+    self.bConvert.setEnabled(False)
+    
+    #Create file dialog element
+    self.fd = pya.QFileDialog(self)
+    self.fd.setViewMode(self.fd.List)
+    
+  def initLayout(self):
+    #Lay out GUI elements  
+    
+    #Line up elements horizontally
+    self.hlFileBrowser = pya.QHBoxLayout()
+    self.hlFileBrowser.addWidget(self.bFileBrowser)        
+    
+    #Line up elements horizontally    
+    self.hlPadding = pya.QHBoxLayout()
+    self.hlPadding.addWidget(self.labelPadding)
+    self.hlPadding.addStretch()
+    self.hlPadding.addWidget(self.sbPadding)
+    
+    #Line up elements horizontally    
+    self.hlPlateWidth = pya.QHBoxLayout()
+    self.hlPlateWidth.addWidget(self.labelPlateWidth)
+    self.hlPlateWidth.addStretch()
+    self.hlPlateWidth.addWidget(self.labelPlateWidthValue)
+    
+    #Line up elements horizontally    
+    self.hlPlateHeight = pya.QHBoxLayout()
+    self.hlPlateHeight.addWidget(self.labelPlateHeight)
+    self.hlPlateHeight.addStretch()
+    self.hlPlateHeight.addWidget(self.labelPlateHeightValue)
+    
+    #Line up elements horizontally    
+    self.hlFillCell = pya.QHBoxLayout()
+    self.hlFillCell.addWidget(self.labelFillCell)
+    self.hlFillCell.addStretch()
+    self.hlFillCell.addWidget(self.cbFillCell)
+    
+    #Line up elements vertically    
+    self.verticalLayout = pya.QVBoxLayout(self)
+    self.verticalLayout.addLayout(self.hlFileBrowser)
+    self.verticalLayout.addLayout(self.hlPadding)
+    self.verticalLayout.addLayout(self.hlPlateWidth)
+    self.verticalLayout.addLayout(self.hlPlateHeight)
+    self.verticalLayout.addLayout(self.hlFillCell)
+    self.verticalLayout.addWidget(self.bConvert)
+    
+    #Set the layout
+    self.setLayout(self.verticalLayout)
+  
+  def initConnection(self):
+    #Connect GUI elements to functions
+    
+    #When bFileBrowser is clicked, execute the function loadImage()
+    self.bFileBrowser.clicked(self.loadTSV)
+    
+    #When bConvert is clicked, execute the function convert()
+    self.bConvert.clicked(self.convert)
+    self.sbPadding.editingFinished(self.updateNamePlate)
+  
+  def loadTSV(self):
+    '''
+    loadCSV()
+      
+    Opens a file browser interface to select and load a CSV file
+      
+    Parameters
+    ---------
+    filename : From Interface
+              The absolute file path to the image
+      
+    Returns
+    ------
+    text : np.ndarray
+              The loaded text file
+    
+    Description
+    ---------
+    The text is loaded and formatted such that:
+         1) Each row 
+    '''
+    #If the file browser is executed
+    if self.fd.exec_():
+        #Get the path of the selected file
+        filename = self.fd.selectedFiles()
+        try:
+          #Load the textToGDS
+          with open(filename[0]) as fid:
+            reader = csv.reader(fid,delimiter="\t")
+            self.text = list(reader)
+          self.maxLine = len(self.text[0])
+          self.maxChar = 0
+          for i in self.text:
+            for j in i:
+              if len(j) &gt; self.maxChar:
+                self.maxChar = len(j)
+          self.updateNamePlate()
+          self.bConvert.setEnabled(True)
+        except:
+          #Raise an error if the image format isn't supported
+          raise Exception("The selected file (" +  filename[0].split('/')[-1] + ")is not a supported format")
+  
+  def updateNamePlate(self):
+    '''
+    updateNamePlate()
+      
+    Updates the width and height of a nameplate
+    
+    Description
+    ---------
+    This function calculates the width and height of the nameplate. 
+    The width depends on the longest string and padding. 
+    The height depends on the number of columns in the TSV file
+    '''
+    if self.text == None:
+      return
+    
+    #Get the nameplate padding in [um]
+    padding = self.sbPadding.value
+    
+    #Calculate the plate dimensions
+    plateWidth = self.maxChar*self.charWidth/1000+2*padding
+    plateHeight = self.maxLine*self.charHeight/1000+2*padding
+    
+    self.labelPlateWidthValue.setText(str("%0.2f" % plateWidth))
+    self.labelPlateHeightValue.setText(str("%0.2f" % plateHeight))
+    self.repaint()
+    
+  def convert(self, checked):
+    '''
+    convert()
+      
+    Converts the text into a GDS layout
+      
+    Parameters
+    ---------
+    Threshold : From Interface
+              Pixels below the threshold will be converted to a GDS pixel
+      
+    Returns
+    ------
+    Image : A Cell
+              A GDS layout of the image will be stored in a cell named Image and be made the active cell
+    
+    Description
+    ---------
+    This function converts an image into grayscale. Then a threshold is applied to convert the grayscale
+    image into a binary image. Finally each pixel in the binary image is converted into a 1 um square
+    in a GDS layout.
+    '''
+    
+    self.bConvert.setText('Converting... ')
+    self.repaint()
+    
+    #Gets a reference to the cell view
+    cv = pya.CellView().active()
+    
+    #Gets a reference to the active cell
+    cellFill = cv.cell
+    
+    #Gets a reference to the active layout
+    layout = cv.layout()
+    layer = layout.layer(1,0)
+
+    #Gets the active cell
+    cell = layout.create_cell('Text')
+          
+    textWidth = 6000
+    textHeight = 8000
+    
+    #Scale plate padding
+    platePadding = self.sbPadding.value/layout.dbu
+    plateWidth = self.maxChar*self.charWidth+2*platePadding
+    plateHeight = self.maxLine*self.charHeight+2*platePadding
+    
+    nPlate = len(self.text)
+    
+    #Track the conversion progress
+    counter = 0.0
+    progress = 0.01
+    
+    if not self.cbFillCell.isChecked():
+      #Determine the nameplate positions
+      if (plateWidth &gt; plateHeight):
+        ratio = plateWidth/plateHeight
+        cols = math.ceil((nPlate/ratio) ** .5)
+        rows = math.ceil(nPlate/cols)
+      
+      #Generate the name plates
+      a = shape()
+      row = 0
+      col = 0
+      for i in self.text:
+        ypos = 0
+        for j in i:
+          tt = pya.ICplxTrans(col*plateWidth, -row*plateHeight-ypos*textHeight)
+          region = a.text(j)
+          cell.shapes(layer).insert(region,tt)
+          ypos += 1
+        col += 1
+        if col &gt;= cols:
+          col = 0
+          row += 1
+        
+        #Update the convert button text to display progress
+        counter += 1
+        if (counter/nPlate &gt; progress):
+          self.bConvert.setText('Converting... '  + str(int(progress*100)) + "%")
+          self.repaint()
+          progress = counter/nPlate + 0.01
+    else:
+      #Get the number of shapes
+      nShapes = cellFill.shapes(layer).size()
+      #Get the shape iterator referencing all shapes inside the cell
+      shapes = layout.begin_shapes(cellFill, layer)
+      a = shape()
+      i = 0
+      while not shapes.at_end():
+        #Gets the center of the bounding box for the shape
+        bboxCenter = shapes.shape().bbox().center()
+        ypos = 0
+        for j in self.text[i]:
+          tt = pya.ICplxTrans(bboxCenter.x,bboxCenter.y-ypos*textHeight)
+          region = a.text(j)
+          cell.shapes(layer).insert(region,tt)
+          ypos += 1
+        i = (i+1)%nPlate
+        
+        #Update the convert button text to display progress
+        counter += 1
+        if (counter/nShapes &gt; progress):
+          self.bConvert.setText('Converting... '  + str(int(progress*100)) + "%")
+          self.repaint()
+          progress = counter/nShapes + 0.01
+          
+        #Go to the next shape in the iterator
+        shapes.next()
+    
+    #Close the dialog box
+    self.close()
+    #Make the image layout the active cell
+    cv.cell = cell
+    # Make the newly added layers visible
+    pya.LayoutView.current().add_missing_layers()
+
+# Instantiate the dialog and make it visible initially.
+# Passing the main_window will make it stay on top of the main window.
+dialog = textToGDS(pya.Application.instance().main_window())
+dialog.show()
+</text>
+</klayout-macro>
