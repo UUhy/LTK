@@ -62,19 +62,32 @@ class saveAsSVG(pya.QDialog):
 
     #Create label elements
     self.labelMag = pya.QLabel('Scale: ', self)
-    self.labelSize = pya.QLabel('Size [Pixel]: ', self)
+    self.labelSize = pya.QLabel('Size [mm]: ', self)
     self.labelDimension = pya.QLabel('', self)
     
     #Create line edit elements
     self.leMag = pya.QLineEdit("1", self)
     self.leMag.setFixedWidth(50)
-    self.leMag.setToolTip('Set a scale and press &lt;enter&gt;')        
+    self.leMag.setToolTip('Set a value to scale the image to 200mm x 200mm or less')        
+    
+    #Create checkbox elements   
+    self.cbInvert = pya.QCheckBox(self)
+    self.cbInvert.setText('Invert Pattern')
+    self.cbInvert.setChecked(True)
+    self.cbInvert.setToolTip('TinkerCAD will think the pattern is a hole')
+    
+    self.cbSlice = pya.QCheckBox(self)
+    self.cbSlice.setText('Cross Section')
+    self.cbSlice.setChecked(True)
+    self.cbSlice.setToolTip('An extra pattern will be created for slicing the pattern in TinkerCAD')
     
     #Create button element
     self.bSave = pya.QPushButton(self)
     self.bSave.setText('Save as SVG')
     #Ensures the &lt;enter&gt; button does not active the button
     self.bSave.setAutoDefault(False)
+    self.bSave.setEnabled(False)
+    self.bSave.setToolTip('The size must be 200mm x 200mm or less')
     
   def initLayout(self):
     #Lay out GUI elements  
@@ -91,10 +104,17 @@ class saveAsSVG(pya.QDialog):
     self.hlSize.addStretch()
     self.hlSize.addWidget(self.labelDimension)
     
+    #Line up elements horizontally    
+    self.hlCB = pya.QHBoxLayout()
+    self.hlCB.addWidget(self.cbInvert)
+    self.hlCB.addStretch()
+    self.hlCB.addWidget(self.cbSlice)
+    
     #Line up elements vertically    
     self.verticalLayout = pya.QVBoxLayout(self)
     self.verticalLayout.addLayout(self.hlMag)
     self.verticalLayout.addLayout(self.hlSize)
+    self.verticalLayout.addLayout(self.hlCB)
     self.verticalLayout.addWidget(self.bSave)
     
     #Set the layout
@@ -107,7 +127,7 @@ class saveAsSVG(pya.QDialog):
     self.bSave.clicked(self.saveFile)
     
     #When leMag detects &lt;enter&gt; is pushed, execute the function updateDim()
-    self.leMag.returnPressed(self.updateDim)
+    self.leMag.editingFinished(self.updateDim)
   
   def saveFile(self):
     '''
@@ -118,6 +138,8 @@ class saveAsSVG(pya.QDialog):
     '''
     #If the file browser is executed
     filename = pya.FileDialog.ask_save_file_name("Save As SVG", "", "SVG (*.svg)")
+    #Break up filename at the dot so that we can adjust the filename
+    filename = filename.split(".")
     
     #Gets a reference to the active cell view
     cv = pya.CellView().active()
@@ -142,8 +164,8 @@ class saveAsSVG(pya.QDialog):
     #Gets the magnification from interface
     mag = float(self.leMag.text)
     
-    #Initialize an SVG object and specify its dimension
-    s = svg.svg(bbox.width()*dbu*mag, bbox.height()*dbu*mag)
+    #Create a 200 x 200 canvas for inverting the image
+    canvas = pya.Polygon([pya.Point(0,0), pya.Point(0,200), pya.Point(200,200), pya.Point(200,0)])
     
     #Get all the layers in the layer view  
     layerIterator = lv.each_layer()
@@ -157,14 +179,23 @@ class saveAsSVG(pya.QDialog):
       #If there are no shapes, then skip
       if shapeIterator.at_end():
         continue
+        
+      #Initialize an SVG object and specify its dimension
+      #TinkerCAD canvas is 200 x 200
+      s = svg.svg(200,200)
+    
       #Start an svg group
       s.startGroup(layer)
-      #Insert all the shapes
+      
+      #Insert all the shapes_rec
+      if self.cbInvert.isChecked():
+        s.insertPolygon(canvas)
+      
       while not shapeIterator.at_end():
         shape = shapeIterator.shape()
         if shape.is_box():
           #Insert a box shape with all the transformations and scaling
-          s.insertBox(shape.box.transformed(tc * shapeIterator.trans())*dbu*mag)
+          s.insertPolygon(shape.polygon.transformed(tc * shapeIterator.trans())*dbu*mag)
         elif shape.is_polygon():
           #Insert a polygon with all the transformations and scaling
           s.insertPolygon(shape.polygon.transformed(tc * shapeIterator.trans())*dbu*mag)
@@ -172,8 +203,20 @@ class saveAsSVG(pya.QDialog):
         shapeIterator.next()
       #End an svg group
       s.endGroup()
-    #Write the file
-    s.write(filename)
+      
+      #Layer Number
+      layerNumber = "_L" + str(layer.source_layer)
+      #Write the file
+      s.write(filename[0]+layerNumber+"."+filename[1])
+    
+    #Create a box for cutting a cross section
+    canvasSlice = pya.Polygon([pya.Point(0,0), pya.Point(0,100), pya.Point(200,100), pya.Point(200,0)])
+    s = svg.svg(200,200)
+    s.startGroup(layer)
+    s.insertPolygon(canvasSlice)
+    s.endGroup()
+    layerNumber = "_L" + str(layer.source_layer+1)
+    s.write(filename[0]+layerNumber+"."+filename[1])
     
   def updateDim(self):
     '''
@@ -189,6 +232,11 @@ class saveAsSVG(pya.QDialog):
     mag = float(self.leMag.text)
     #Update the label dimension
     self.labelDimension.setText("%d x %d" % (bbox.width()*mag, bbox.height()*mag))
+    
+    if (bbox.width()*mag &lt;= 200 and bbox.height()*mag &lt;= 200):
+      self.bSave.setEnabled(True)
+    else:
+      self.bSave.setEnabled(False)
 
 # Instantiate the dialog and make it visible initially.
 # Passing the main_window will make it stay on top of the main window.
