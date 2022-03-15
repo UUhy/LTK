@@ -410,7 +410,7 @@ class shape(object):
       secondaryFlat : integer
             The length of the secondary flat
       angle : double
-            The location of the secondary flat relative (counterclockwise) to primary flat
+            The location of the secondary flat relative (counterclockwise) to primary flat in degrees
       vertices : integer (coerce to even number)
             The number of vertices used to generate the circle
       
@@ -443,7 +443,7 @@ class shape(object):
       polygon = polygon.round_corners(0,r,vertices)
       
       #Create a rectangle to produce the primary flat
-      pRectangle = pya.Polygon([pya.Point(-r,r-pH), pya.Point(-r,r+pH), pya.Point(r,r+pH), pya.Point(r,r-pH)])
+      pRectangle = pya.Polygon([pya.Point(-r,-r-pH), pya.Point(-r,-r+pH), pya.Point(r,-r+pH), pya.Point(r,-r-pH)])
       
       #Create a rectangle to produce the secondary flat
       sRectangle = pya.Polygon([pya.Point(-r,r-sH), pya.Point(-r,r+sH), pya.Point(r,r+sH), pya.Point(r,r-sH)])

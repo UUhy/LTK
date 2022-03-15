@@ -49,6 +49,10 @@ class siWafer(pya.PCellDeclarationHelper):
     self.param("secondaryFlatAngle", self.TypeInt, "Secondary Flat Angle [degrees]", default = 1, choices = [["45", 0],["90", 1],["180", 2]])
     self.param("invert", self.TypeBoolean, "Hole", default = False)
     self.param("border", self.TypeDouble, "   Border Width [mm]", default = 10) 
+    self.param("ring", self.TypeBoolean, "Ring", default = False)
+    self.param("dIn", self.TypeDouble, "   Width Inwards [mm]", default = 2) 
+    self.param("dOut", self.TypeDouble, "   Width Outwards [mm]", default = 2)
+    self.param("doubleFlat", self.TypeBoolean, "Double Flat", default = False)
 
   def display_text_impl(self):
     print self.diameter
@@ -76,10 +80,26 @@ class siWafer(pya.PCellDeclarationHelper):
     sFlat = self.specSecondaryFlat[self.diameter] / self.layout.dbu * 1000
     aFlat = self.specSecondaryFlatAngle[self.secondaryFlatAngle]
     b = self.border / self.layout.dbu * 1000
+    dIn = self.dIn / self.layout.dbu * 1000
+    dOut = self.dIn / self.layout.dbu * 1000
     
-    # Create the cross
+    # Create the wafer shape
     s = shape()
     region = s.siWafer(d, pFlat, sFlat, aFlat, 128)
+    
+    if (self.doubleFlat):
+      regionTmp = region.dup()
+      regionTmp.transform(pya.ICplxTrans(1,180, False, 0, 0))
+      region = region & regionTmp
+    
+    if (self.ring):
+      scaleIn = (d-dIn)/d;
+      scaleOut = (d+dOut)/d;
+      regionOut = region.dup()
+      regionOut.transform(pya.ICplxTrans(scaleOut,0, False, 0, 0))
+      regionIn = region.dup()
+      regionIn.transform(pya.ICplxTrans(scaleIn,0, False, 0, 0))
+      region = regionOut - regionIn
     
     if (self.invert):
       region = s.invert(region,b)
