@@ -81,7 +81,7 @@ class siWafer(pya.PCellDeclarationHelper):
     aFlat = self.specSecondaryFlatAngle[self.secondaryFlatAngle]
     b = self.border / self.layout.dbu * 1000
     dIn = self.dIn / self.layout.dbu * 1000
-    dOut = self.dIn / self.layout.dbu * 1000
+    dOut = self.dOut / self.layout.dbu * 1000
     
     # Create the wafer shape
     s = shape()
