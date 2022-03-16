@@ -45,7 +45,7 @@ class siWafer(pya.PCellDeclarationHelper):
     self.specSecondaryFlat = [8, 11.18, 18, 27.5, 37.5]
     self.specSecondaryFlatAngle = [45,90,180]
     self.param("layer", self.TypeLayer, "Layer", default = pya.LayerInfo(1, 0))
-    self.param("diameter", self.TypeInt, "Diameter [mm]", default = 0, choices = [["50.8", 0],["76.2", 1],["100", 2],["125", 2],["150", 2]])
+    self.param("diameter", self.TypeInt, "Diameter [mm]", default = 0, choices = [["50.8", 0],["76.2", 1],["100", 2],["125", 3],["150", 4]])
     self.param("secondaryFlatAngle", self.TypeInt, "Secondary Flat Angle [degrees]", default = 1, choices = [["45", 0],["90", 1],["180", 2]])
     self.param("invert", self.TypeBoolean, "Hole", default = False)
     self.param("border", self.TypeDouble, "   Border Width [mm]", default = 10) 
