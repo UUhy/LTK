@@ -58,9 +58,10 @@ class alignmentMark(pya.PCellDeclarationHelper):
   '''
   def __init__(self):
     super(alignmentMark, self).__init__()
+    self.param("pos", self.TypeDouble, "Position [mm]", default = 40)
     self.param("layer", self.TypeLayer, "Layer", default = pya.LayerInfo(1,0))
     self.param("type", self.TypeInt, "Type", default = 0, choices = [["Wafer", 0],["Mask", 1]])
-    self.param("mask", self.TypeInt, "Mask Type", default = 0, choices = [["Dark Field", 0],["Light Field", 1]])
+    self.param("mask", self.TypeInt, "Mask Type", default = 0, choices = [["Dark Field", 0],["Clear Field", 1]])
     self.param("num", self.TypeString, "Mask Number", default = "01")
     self.param("res", self.TypeDouble, "Resolution [um]", default = 0.2)
     self.param("cross", self.TypeInt, "Cross Type", default = 0, choices = [["Solid", 0],["Dashed", 1]])
@@ -99,8 +100,7 @@ class alignmentMark(pya.PCellDeclarationHelper):
     
     # Mask number parameters
     mLineWidth = 4
-    mPosL = pya.Point(-40000,90000)
-    mPosR = pya.Point(40000,90000)
+    mPos = pya.Point(140000,140000)
     
     # Border
     border = 10
@@ -109,6 +109,10 @@ class alignmentMark(pya.PCellDeclarationHelper):
     cv = pya.CellView().active()
     layout = cv.layout()
     dbu = self.layout.dbu
+    
+    # Position of the Alignment Marks
+    posLeftMark = pya.Point(-self.pos*1000/dbu,0)
+    posRightMark = pya.Point(self.pos*1000/dbu,0)
     
     s = shape()
     
@@ -132,40 +136,94 @@ class alignmentMark(pya.PCellDeclarationHelper):
         cross.transform(pya.Trans(cPos))
     
     if (self.type == 0): #Wafer Type
-      #Create Vernier Left 1
+      #Create Vernier Patterns
       vLeft = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu)
       vLeft.transform(pya.Trans(vPosL))
-      
-      #Create Vernier Bottom 1
-      vBot = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu)
-      vBot.transform(pya.Trans(1, False, vPosB.x, vPosB.y))
+      vBot = vLeft.dup()
+      vBot.transform(pya.Trans(1,0,0,0))
+      vRight = vLeft.dup()
+      vRight.transform(pya.Trans(2,0,0,0))
+      vTop = vLeft.dup()
+      vTop.transform(pya.Trans(3,0,0,0))
       
       #Create Mask Number 
-      tt = pya.CplxTrans(mLineWidth, 0, False, mPosL.x, mPosL.y)
-      mNum = s.text(self.num).transform(tt)
+      tt = pya.CplxTrans(mLineWidth, 0, False, -mPos.x, mPos.y)
+      mNumLeft = s.text(self.num).transform(tt)
+      mNumRight = mNumLeft.dup()
+      mNumRight.transform(pya.Trans(2,True,0,0))
     else:
       #Create Vernier Left 2
       vLeft = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu+self.res/dbu)
       vLeft.transform(pya.Trans(2, False, vPosL.x-vLength/dbu-vGap/dbu, vPosL.y))
-    
-      #Create Vernier Bottom 2
-      vBot = s.vernier(vWidth/dbu, vLength/dbu, vPitch/dbu+self.res/dbu)
-      vBot.transform(pya.Trans(3, False, vPosB.x, vPosB.y-vLength/dbu-vGap/dbu))
+      vBot = vLeft.dup()
+      vBot.transform(pya.Trans(1,0,0,0))
+      vRight = vLeft.dup()
+      vRight.transform(pya.Trans(2,0,0,0))
+      vTop = vLeft.dup()
+      vTop.transform(pya.Trans(3,0,0,0))
     
       #Create Mask Number
-      tt = pya.CplxTrans(mLineWidth, 0, False, mPosR.x, mPosR.y)
-      mNum = s.text(self.num).transform(tt)
+      tt = pya.CplxTrans(mLineWidth, 0, False, -mPos.x, -mPos.y)
+      mNumLeft = s.text(self.num).transform(tt)
+      mNumRight = mNumLeft.dup()
+      mNumRight.transform(pya.Trans(2,True,0,0))
     
-    #Creates the Wafer Alignment Mark
-    region = pya.Region()
-    region.insert(cross)
-    region.insert(vLeft)
-    region.insert(vBot)
-    region.insert(mNum)
+    #Create Shapes for Left Mark and Right Mark 
+    leftMarkCross = cross.dup()
+    leftMarkCross.transform(pya.Trans(posLeftMark))
+    leftMarkVernierLeft = vLeft.dup()
+    leftMarkVernierLeft.transform(pya.Trans(posLeftMark))
+    leftMarkVernierBot = vBot.dup()
+    leftMarkVernierBot.transform(pya.Trans(posLeftMark))
+    leftMarkVernierRight = vRight.dup()
+    leftMarkVernierRight.transform(pya.Trans(posLeftMark))
+    leftMarkVernierTop = vTop.dup()
+    leftMarkVernierTop.transform(pya.Trans(posLeftMark))
+    leftMarkMNumLeft = mNumLeft.dup()
+    leftMarkMNumLeft.transform(pya.Trans(posLeftMark))
+    leftMarkMNumRight = mNumRight.dup()
+    leftMarkMNumRight.transform(pya.Trans(posLeftMark))
+    
+    rightMarkCross = cross.dup()
+    rightMarkCross.transform(pya.Trans(posRightMark))
+    rightMarkVernierLeft = vLeft.dup()
+    rightMarkVernierLeft.transform(pya.Trans(posRightMark))
+    rightMarkVernierBot = vBot.dup()
+    rightMarkVernierBot.transform(pya.Trans(posRightMark))
+    rightMarkVernierRight = vRight.dup()
+    rightMarkVernierRight.transform(pya.Trans(posRightMark))
+    rightMarkVernierTop = vTop.dup()
+    rightMarkVernierTop.transform(pya.Trans(posRightMark))
+    rightMarkMNumLeft = mNumLeft.dup()
+    rightMarkMNumLeft.transform(pya.Trans(posRightMark))
+    rightMarkMNumRight = mNumRight.dup()
+    rightMarkMNumRight.transform(pya.Trans(posRightMark))
+    
+    #Creates the Wafer Alignment MarkCross
+    regionLeft = pya.Region()
+    regionLeft.insert(leftMarkCross)
+    regionLeft.insert(leftMarkVernierLeft)
+    regionLeft.insert(leftMarkVernierBot)
+    regionLeft.insert(leftMarkVernierRight)
+    regionLeft.insert(leftMarkVernierTop)
+    regionLeft.insert(leftMarkMNumLeft)
+    regionLeft.insert(leftMarkMNumRight)
+      
+    regionRight = pya.Region()
+    regionRight.insert(rightMarkCross)
+    regionRight.insert(rightMarkVernierLeft)
+    regionRight.insert(rightMarkVernierBot)
+    regionRight.insert(rightMarkVernierRight)
+    regionRight.insert(rightMarkVernierTop)
+    regionRight.insert(rightMarkMNumLeft)
+    regionRight.insert(rightMarkMNumRight)
+   
     if (self.type == 1) and (self.mask == 0):
-      region = s.invert(region,border/dbu)
+      regionLeft = s.invert(regionLeft,border/dbu)
+      regionRight = s.invert(regionRight,border/dbu)
         
-    self.cell.shapes(self.layer_layer).insert(region)
+    self.cell.shapes(self.layer_layer).insert(regionLeft)
+    self.cell.shapes(self.layer_layer).insert(regionRight)
     
 if __name__ == '__main__':
   #This function will automatically run if Python is running this file
