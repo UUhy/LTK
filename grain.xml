@@ -3,7 +3,7 @@
  <name>LTK</name>
  <token/>
  <hidden>false</hidden>
- <version>0.5</version>
+ <version>0.6</version>
  <api-version>0.25</api-version>
  <title>Lithography Tool Kit</title>
  <doc>This kit contain PCells and Macros that will facilitate the design of masks for photolithography and patterns for electron beam lithography.</doc>
