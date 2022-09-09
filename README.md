@@ -5,7 +5,7 @@ Lithography Took Kit for KLayout GDSII editor. This kit contains PCells and macr
 * Digitize Graph: Converts the layout of a graph into a CSV file
 * Image to GDS Converter: Converts an image into a binary GDSII layout
 * Save to SVG: Save the active cell as an SVG file
-* Text to GDS Convert: Converts a tab separated value (tsv) file to GDS
+* Text to GDS: Converts a tab separated value (tsv) file of text to GDS
 * Write Time Calculator: Estimates the write time for electron beam lithography
 * Reload LTK
 
