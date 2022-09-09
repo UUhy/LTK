@@ -89,7 +89,7 @@ class textToGDS(pya.QDialog):
     self.cbFillCell = pya.QCheckBox(self)
     self.cbFillCell.setText('')
     self.cbFillCell.setToolTip('Place name plates at the center of each shape in the cell')
-    self.cbFillCell.setChecked(True)
+    self.cbFillCell.setChecked(False)
     
     #Create button element
     self.bFileBrowser = pya.QPushButton(self)

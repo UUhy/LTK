@@ -14,7 +14,24 @@
  <menu-path>macros_menu.my_group&gt;end("LTK").end</menu-path>
  <interpreter>python</interpreter>
  <dsl-interpreter-name/>
- <text>import pya
+ <text>import sys
+ls = sys.path
+
+#Does a path to ltkpack exist
+matches = [match for match in ls if "ltkpack" in match]
+if (matches == []):
+  #Find the klayout/python folder on Mac
+  matches = [match for match in ls if "ayout/python" in match]
+  if (matches != []):
+    sys.path.append(matches[0] + '/ltkpack')
+  else:
+    #Find the klayout/ppython folder on Windows
+    matches = [match for match in ls if "ayout\\python" in match]
+    if (matches == []):
+      raise Exception("Can not locate the python folder to create a path to ltkpack")
+    sys.path.append(matches[0] + '\\ltkpack')
+
+import pya
 
 from alignmentMark import alignmentMark
 from cassette import cassette

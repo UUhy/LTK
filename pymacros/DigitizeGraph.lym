@@ -462,7 +462,7 @@ class digitizeGraph(pya.QDialog):
       pixel = pya.Box(-hw,-hw,hw,hw)
       #Insert pixel polygons into the cell
       for i in range(len(upx)):
-        t = pya.Trans(upx[i],upy[i])
+        t = pya.Trans(int(upx[i]),int(upy[i]))
         cell.shapes(verifyLayer).insert(t.trans(pixel))
     
     #Determine the actual x and y data values
@@ -482,6 +482,8 @@ class digitizeGraph(pya.QDialog):
     
     ipx = upx/pixel_width-pixel_xStart
     ipy = upy/pixel_width-pixel_yStart
+    ipx = ipx.astype(int)
+    ipy = ipy.astype(int)
     
     #Check if the data is outside of the axis boundary
     if np.min(ipx) &lt; 0:

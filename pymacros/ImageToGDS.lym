@@ -78,7 +78,7 @@ class imageToGDS(pya.QDialog):
     #Create checkbox elements
     self.cbMerge = pya.QCheckBox(self)
     self.cbMerge.setText('Merge pixels')
-    self.cbMerge.setChecked(True)
+    self.cbMerge.setChecked(False)
     
     self.cbInvert = pya.QCheckBox(self)
     self.cbInvert.setText('Invert Threshold')
@@ -230,7 +230,7 @@ class imageToGDS(pya.QDialog):
      
     #Insert pixel polygons into the cell
     for i in pos:
-      t = pya.Trans(i[1],-i[0])
+      t = pya.Trans(int(i[1]),int(-i[0]))
       cell.shapes(layer).insert(t.trans(poly))
       
       #Update the convert button text to display progress
@@ -244,7 +244,7 @@ class imageToGDS(pya.QDialog):
     region = pya.Region.new(cell.begin_shapes_rec(layer))
     
     #Move the image so that the center of the bottom left pixel is at (0,0)
-    t = pya.Trans(-region.bbox().left+w/2,-region.bbox().bottom+w/2)
+    t = pya.Trans(int(-region.bbox().left+w/2),int(-region.bbox().bottom+w/2))
     region.transform(t)
     
     #Merge selected polygons

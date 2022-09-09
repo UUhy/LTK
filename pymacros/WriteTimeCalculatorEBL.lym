@@ -182,6 +182,13 @@ class calcWriteTimeEBL(pya.QDialog):
     This function calculates the minimal write time for EBL
     The actual write time is longer due to time spent on beam
     blanking and stage moves
+    
+    Todo
+    ----
+    Tracking conversion progress function is disabled because it
+    only works for a flattened cell. The following line does not
+    return the number of shapes when the cell is not flattened
+        nShapes += cell.shapes(layout.layer(i)).size()
     '''
     
     #Gets a reference to the cell view
@@ -208,13 +215,13 @@ class calcWriteTimeEBL(pya.QDialog):
     dose = self.get_leDose()
     
     #Get the total number of shapes
-    nShapes = 0
-    for i in layerList:
-      nShapes += cell.shapes(layout.layer(i)).size()
+    #nShapes = 0
+    #for i in layerList:
+    #  nShapes += cell.shapes(layout.layer(i)).size()
 
     #Track the conversion progress
-    counter = 0.0
-    progress = 0.01
+    #counter = 0.0
+    #progress = 0.01
 
     result = []
     #Calculate area and write time for each layer
@@ -230,11 +237,11 @@ class calcWriteTimeEBL(pya.QDialog):
         shapes.next()
         
         #Update the convert button text to display progress
-        counter += 1
-        if (counter/nShapes &gt; progress):
-          self.bCalc.setText('Calculating... '  + str(int(progress*100)) + "%")
-          self.repaint()
-          progress = counter/nShapes + 0.01
+        #counter += 1
+        #if (counter/nShapes &gt; progress):
+        #  self.bCalc.setText('Calculating... '  + str(int(progress*100)) + "%")
+        #  self.repaint()
+        #  progress = counter/nShapes + 0.01
       
       self.bCalc.setText('Estimate Write Time')
       self.repaint()
