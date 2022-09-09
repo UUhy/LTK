@@ -55,7 +55,6 @@ class siWafer(pya.PCellDeclarationHelper):
     self.param("doubleFlat", self.TypeBoolean, "Double Flat", default = False)
 
   def display_text_impl(self):
-    print self.diameter
     return "Silicon Wafer\n" + "Diameter [mm] = " + str(self.specDiameter[self.diameter])
   
   def coerce_parameters_impl(self):   
