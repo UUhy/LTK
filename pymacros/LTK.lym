@@ -31,6 +31,20 @@ if (matches == []):
       raise Exception("Can not locate the python folder to create a path to ltkpack")
     sys.path.append(matches[0] + '\\ltkpack')
 
+#Does a path to ltkpack exist
+matches = [match for match in ls if "salt/LTK/python/ltkpack" in match]
+if (matches == []):
+  #Find the klayout/python folder on Mac
+  matches = [match for match in ls if "ayout/salt/LTK/python" in match]
+  if (matches != []):
+    sys.path.append(matches[0] + '/ltkpack')
+  else:
+    #Find the klayout/ppython folder on Windows
+    matches = [match for match in ls if "ayout\\salt\\LTK\\python" in match]
+    if (matches == []):
+      raise Exception("Can not locate the salt\LTK\python folder to create a path to ltkpack")
+    sys.path.append(matches[0] + '\\ltkpack')
+
 import pya
 
 from alignmentMark import alignmentMark
