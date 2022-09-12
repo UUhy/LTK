@@ -208,20 +208,16 @@ class imageToGDS(pya.QDialog):
     #Gets the active cell
     cell = layout.create_cell('Image')
     
-    #If image is not grayscale, then convert it to grayscale
-    #if len(self.image.shape) &gt; 2:
-    #  r, g, b = self.image[:,:,0], self.image[:,:,1], self.image[:,:,2]
-    #  self.image = 0.299*r + 0.587*g + 0.114*b
-    
     #Create a pixel polygon
     w = int(self.sbPixel.value/layout.dbu/1000)
     poly = pya.Box(0,0,w,w)
     
     #Locate all pixels that pass the threshold
+    threshold = float(self.sbThreshold.value)/100*255
     if self.cbInvert.isChecked():
-      pos = np.argwhere(self.image &gt; float(self.sbThreshold.value)*255)*w
+      pos = np.argwhere(self.image &gt; threshold)*w
     else:
-      pos = np.argwhere(self.image &lt;= float(self.sbThreshold.value)*255)*w
+      pos = np.argwhere(self.image &lt;= threshold)*w
      
     #Track the conversion progress
     counter = 0.0
