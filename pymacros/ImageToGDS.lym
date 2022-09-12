@@ -32,7 +32,7 @@
 
 import pya
 import numpy as np
-import matplotlib.image as mpimg
+from PIL import Image
 
 class imageToGDS(pya.QDialog):
   """
@@ -169,7 +169,7 @@ class imageToGDS(pya.QDialog):
         filename = self.fd.selectedFiles()
         try:
           #Load the image
-          self.image = mpimg.imread(filename[0])
+          self.image = np.asarray(Image.open(filename[0]).convert('L'))
           self.bConvert.setEnabled(True)
         except:
           #Raise an error if the image format isn't supported
@@ -209,9 +209,9 @@ class imageToGDS(pya.QDialog):
     cell = layout.create_cell('Image')
     
     #If image is not grayscale, then convert it to grayscale
-    if len(self.image.shape) &gt; 2:
-      r, g, b = self.image[:,:,0], self.image[:,:,1], self.image[:,:,2]
-      self.image = 0.299*r + 0.587*g + 0.114*b
+    #if len(self.image.shape) &gt; 2:
+    #  r, g, b = self.image[:,:,0], self.image[:,:,1], self.image[:,:,2]
+    #  self.image = 0.299*r + 0.587*g + 0.114*b
     
     #Create a pixel polygon
     w = int(self.sbPixel.value/layout.dbu/1000)
@@ -219,9 +219,9 @@ class imageToGDS(pya.QDialog):
     
     #Locate all pixels that pass the threshold
     if self.cbInvert.isChecked():
-      pos = np.argwhere(self.image &gt; float(self.sbThreshold.value)/100)*w
+      pos = np.argwhere(self.image &gt; float(self.sbThreshold.value)*255)*w
     else:
-      pos = np.argwhere(self.image &lt;= float(self.sbThreshold.value)/100)*w
+      pos = np.argwhere(self.image &lt;= float(self.sbThreshold.value)*255)*w
      
     #Track the conversion progress
     counter = 0.0
