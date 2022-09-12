@@ -23,9 +23,8 @@ Lithography Took Kit for KLayout GDSII editor. This kit contains PCells and macr
 * Jeol: JBX-5500FS Cassette
 
 ## Known Problems
-Macros that require matplotlib does not work on Windows.
-KLayout Python cannot load matplotlib due to circular imports.
-No idea how to solve this problem.
+ImagetoGDS macro does not work on Windows
+* Need to figure out the problem importing the packaged Pillow on Windows
 
 The LTK library loads before a layout is loaded. PCells that require layer data such as
 Jeol - Dose Series and Jeol - Field Markers will fail to load properly. To fix this,
