@@ -8,13 +8,15 @@
  <doc/>
  <autorun>true</autorun>
  <autorun-early>false</autorun-early>
+ <priority>0</priority>
  <shortcut/>
  <show-in-menu>true</show-in-menu>
  <group-name/>
  <menu-path>macros_menu.my_group&gt;end("LTK").end</menu-path>
  <interpreter>python</interpreter>
  <dsl-interpreter-name/>
- <text>import sys
+ <text>'''
+import sys
 ls = sys.path
 
 #Does a path to ltkpack exist
@@ -44,6 +46,7 @@ if (matches == []):
     if (matches == []):
       raise Exception("Can not locate the salt\LTK\python folder to create a path to ltkpack")
     sys.path.append(matches[0] + '\\ltkpack')
+'''
 
 import pya
 
